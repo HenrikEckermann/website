@@ -1,0 +1,250 @@
+---
+title: "test"
+author: "Henrik Eckermann"
+date: "12/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+title: "Logistic Regression in R"
+author: "Henrik Eckermann"
+date: "23.12.2017"
+bibliography: '/Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/BibTex/statistic.bib'
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+$\espsilon$ = error term of a model
+OLS = Ordinary least squares
+ML = Maximum Likelihood
+
+
+#### The logistic regression model
+When the outcome variable is dichotomous, we can use logistic regression instead of linear regression. Since the relationship between the predictors and the outcome cannot be linear with a dichotomous outcome, a link function is used as illustrated below. Different books use different equations/descriptions for the logistic regression model. This can be confusing sometimes but they all refer to either the probability that y=1, given the predictor(s) X or they refer to the expected value of Y, given X:  
+
+@Hosmer2000:  
+$E(Y|x) = \pi(x) = \frac{e^{\beta_0+\beta_1x}}{1+e^{\beta_0+\beta_1x}}$  
+˘
+
+$g(x) = ln [\frac{\pi(x)}{1-\pi(x)}] = \beta_0+\beta_1x$  (what is this?)
+
+@Field2012:  
+$P(Y) = \frac{1}{1+e^{-(b_0+b_1X_1 +b_2X_2 + ... b_iX_i)}}$
+
+@James2013:  
+$P(Y|X) = \frac{e^{a+b_1X_1+...+b_pX_p}}{1+e^{a+b_1X_1+...+b_pX_p}}$
+
+@Gelman2007:  
+$Pr(y_i = 1) = logit^{-1}(X_i\beta)$  &rarr; $Pr(y_i = 1) = logit^{-1}(\beta_0 + \beta_1X_1 + ...\beta_iX_i)$
+
+The function $logit^{-1}(x) = \frac{e^x}{1+e^x}$ transforms continuous values to the range (0,1). Thus, using this function for the linear function $X_i\beta$ results in the  equation used by @James2013. @Gelman2007 prefer to work with $logit^{-1}$ because it focuses on the mapping from the linear predictor to the probabilities, rather than the reverse. To clarify this further, they once more write this up in a different way:  
+
+$Pr(y=1) = p_i$ and  $logit(p_i) = X_i\beta$  
+
+
+#### Comparison with linear regression  
+In linear regression, the outcomes are assumed to be normally distributed with an  $E(Y|X)$, thus the mean is conditional on the observations. Subtracting that mean would result in the error term $\epsilon$, which is assumed to be independent of the predictor variables X and to follow a normal distribution with $\mu=0$ and similar variance $\sigma^2$ across all observations. In logistic regression, the observations $y\in\{0,1\}$  are assumed to follow a Bernoulli distribution, again with an $mean= E(Y|X)$. $E(Y|X)$ for a Bernoulli random variable is the probability $p$ of the event happening. There is no common error distribution that independent of the predictor values. For the prediction of $y_i$ given predictor(s) $X_i$, the error is $1-\pi$ occurring with probability $\pi$, and $0-\pi$ occurring with probability $1-\pi$.  
+To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimizes $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the us assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
+Despite these differences, the general principles that guide us when we perform linear regression also guide us through logistic regression.
+
+```{r echo=FALSE}
+#Load datasets
+library(aplore3)
+setwd('/Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/Block 2/Analyzing in R/Week 4/logistic_regression')
+df <- chdage
+#Fitting model
+head(df)
+model <- glm(chd ~.,family=binomial(link='logit'),data=df[,c('chd', 'age')])
+summary(model)
+```
+
+#### Significance of a model
+As a next step we determine whether the coefficient(s) are significant. To answer this we check whether the model with the predictor leads to more accurate predictions than the model without the predictor. We look at the relative fit to evaluate whether one models fits better than the other. Again I use the comparison to linear regression to illustrate the procedure:  
+In linear regression, the baseline model only has the intercept $\beta_0$, which is the mean of the outcome variable. When used as an estimator, we can calculate the variance of the observed values from this baseline estimator. This variance is called the **_total sum of squares_** (SST). We calculate it as shown below. The total sum of squares can be partitioned into the **residual sum of squares** (RSS) and the **model Sum of Squares** (SSM), which you find in an _analysis of variance table_.
+
+**Total sum of squares (SST)**:  
+$SST = \sum_{i=1}^n (y_i-\bar{y})^2$  
+
+**Residual sum of squares(RSS)** or **Sum of squared errors (SSE)**:  
+$RSS = \sum_{i=1}^n (y_i - \hat{y}_i)^2$  
+
+**Model Sum of Squares (SSM)** or: **Regression sum of squares (SSR)**:  
+$SSM = SST - RSS = [\sum_{i=1}^n (y_i - \bar{y}_i)^2] - [\sum_{i=1}^n (y_i-\hat{y}_i)^2]$
+
+If we have no predictors in the model, then RSS = SST. And if RSS gets smaller with the inclusion of a predictor, then this is because the predictor explains some of the total variance around the base model and is possibly a better estimate than the mean. It should be clear from the above equation that SSM reflects the part of SST that the new model (the fitted regression line) can explain whereas RSS reflects the leftover that it still cannot explain. In ANOVA, the new model would be the group means of the outcome variable for each group given by the independent variable. Analoguous to RSS, in logistic regression, deviation of observed to predicted values is reflected by the **log-likelihood** (LL):  
+
+$LL =\sum_{i=1}^N[Y_iln(\hat{Y_i}) + (1-Y_i)ln(1-\hat{Y_i})]$  
+
+The LL tells how much unexplained information there is after the model has been fitted. The larger the LL, the more unexplained information. We can therefore use the LL to compare models. In practice however, instead of the LL, we use the **deviance** (D) since this statistic follows a $\chi^2$ distribution and therefore allows hypothesis testing:  
+
+$D = -2* LL$  
+
+As @Hosmer2000 emphasizes, we can think of the deviance in the same way as we think of the RSS in the context of testing the significance of a model. To compare two models, we look at their difference in the deviance by calculating the **likelihood-ratio**, which follows the $\chi^2$ distribution:
+
+$\chi^2 = -2*LL_{baseline}-(-2*LL_{new})$, with  $df = k_{new} -k_{baseline}$,  
+
+where k is the number of parameters in the model. In the baseline model with no predictors, there is 1 parameter (intercept). If the $\chi^2$ statistic is significant, then the model with the added predictor explains the outcome better than the baseline model. Whereas in linear regression the baseline model is the mean, in logistic regression the baseline model with only the intercept predicts the score with the highest frequency in the dataset.
+
+#### Interpreting the coefficients
+
+We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ @arm2016 that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $\beta_i$ (holding other predictors constant) would always lead to a change of the slope $\beta_i$ in $\hat{y}$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity.
+
+```{r}
+library(arm)
+##Example 1: 
+#A change of ßX of ~.4 is equivalent to a 10% change in P(Y|X):
+print(logit(0.5))
+print(logit(0.6))
+print(logit(0.5)-logit(0.6))
+# or when we get near the boundaries (here 1) to a change of 3%:
+print(logit(0.9))
+print(logit(0.93))
+print(logit(0.9)-logit(0.93))
+```
+
+In the example of the book, the model is $logit^-1 = -1.4+0.33X$. Thus, a one unit change in x, corresponds to a 0.33 positive change in the logit of the probability of Y. In this example the mean $\bar{x}$ is 3.1. To better grasp what this means, we can for example look at how a one unit change in x near the mean (e.g. one unit change from 3 to 2) changes P(Y|x). Here, this results in a change of ~ 8% (see @Gelman2007 for content of that example, but I will present a full example further below).
+
+```{r}
+##Example 2:
+#A 1 unit change in x (here from 3 to 2) results in a change in P(Y|X) of:
+p_change <- invlogit(-1.4+0.33*3) - invlogit(-1.4+0.33*2)
+print(p_change)
+# A 1 unit change (here from 1 to 2) results in a change in P(Y|X) of:
+p_change_2 <- invlogit(-1.4+0.33*1) - invlogit(-1.4+0.33*2)
+print(p_change_2)
+```
+
+```{r}
+#Evaluate P(Y|x) at the mean
+#invlogit(coef(fit.1)[1] + coef(fit.1)[2]*mean(income))
+```
+
+@Gelman2007 also show that you could calculate the slope at one point for interpretation. More applicable I found the following rule of thumb: Divide $ß_i$ by 4 to get the maximum change in probability for one unit change in the corresponding x. This upper bound is a reasonable approximation (only) near the midpoint of the logistic curve where P(Y|X) is close to 0.5. Another way of interpretation is using the **odds ratio**. The odds of an event are $\frac{p}{1-p}$. The ratio of two odds is called the odds ratio. [An exponentiated logistic regression coefficient can be interpreted as an odds ratio, thus by which factor the odds of the the even y=1 change with a one unit change in the coefficient:]
+
+$log(\frac{Pr(y=1|x)}{Pr(y=0|x)}) =\alpha + \beta x$
+
+
+Let us now consider the example that @Gelman2007 present in their book:
+
+
+```{r}
+#import dataset
+setwd('/Users/henrikeckermann/Documents/Books/Extra/arm/ARM_Data/arsenic')
+df <- read.table('wells.dat')
+df$dist100 <- df$dist/100
+head(df)
+```
+Switch = Whether or not a household switched well
+Arsenic = Arsenic load of well 
+Dist = Distance to the next good well (originally in m but this is rescaled here because the coefficient would be very small, which is misleading here)
+Assoc =
+Educ = 
+
+```{r}
+#histogram of predictor distance to nearest safe well
+library(ggplot2)
+ggplot(df, aes(dist)) +
+  geom_histogram(col='black', fill='white', bins=30)
+```
+
+
+```{r}
+#Fit model and display using display from arm
+library(arm)
+fit_1 <- glm(switch ~ dist100, data= df, family=binomial(link='logit'))
+display(fit_1)
+```
+
+Thus, our model is:
+$P(switch=1|dist) = logit^{-1}(0.61 -0.62*dist100)$
+
+```{r}
+#Plot fitted model
+df$fitted <- fit_1$fitted.values
+ggplot(df, aes(x=fitted, y=dist)) +
+  geom_smooth() +
+  geom_jitter(data=df, aes(x=switch), width=0.05, alpha=0.2) +
+  coord_flip()
+```
+
+The intercept can be interpreted as follows:  
+$P(switch=1|dist=0) = logit^{-1}(0.61-0.62*0) = logit^{-1}(0.61) =$ `r invlogit(0.61)`. Remember also the divide by 4 rule: $0.62/4 =$ `r (-0.62)/4`, thus, a change in dist100 of of 1 (100m) will lead maximal to a reduction of `r -0.62/4` in P(switch=1|dist100) and that most accurate near the mean of dist100 `r mean(df$dist)`. Looking at the significance of the coefficient of dist100 we see that it is highly significant. The standard error is small compared to the coefficient:
+
+
+
+
+
+```{r}
+#Add Arsenic
+fit_2 <- glm(switch ~ dist100 +arsenic, data=df, family=binomial(link='logit'))
+display(fit_2)
+```
+
+Again, quickly interpreting with the divide by four rule, we notice that the change in P(Y|X) is maximal `r (coef(fit_2)[2]/4)*100`% for dist100 and `r (coef(fit_2)[2]/4)*100`% for arsenic.
+
+
+We can compare the models by calculating the log-likelihood ratio, which as pointed out earlier is $D_{baseline} - D_{new}$. We get:
+```{r}
+#I think this is the
+fit_2$deviance - fit_1$deviance
+```
+$df =  k_{new} - k_{baseline}$ &rarr; $df = 3-2 = 1$
+
+
+
+
+
+
+#### Notes from Books
+- The Wald statistic is analogous to the t-statistic in linear regression: Does the predictor $b_i$ contribute? $Wald=\frac{b}{SE_b}$ (The Wald statistic needs to be treated with caution because with increasing b-coefficient the Wald statistic can be underestimated (more likely to make a type II error)
+- More crucial for the interpretation is the **odds ratio: Exp(B) or $e^B$**. To interpret this first see what odds is: $\frac{P(y|x)}{1-P(x|y)}$ The odds ratio can then be interpreted as: Change in odds resulting from a unit change in the predictor. If the odds ratio >1, then the odds get higher with a unit increase in B and vice versa!
+- CI for the Exp(B): 1 is the critical value here and not zero like for example in the t-test!
+- Rule of thumb: 
+
+
+## Assumptions
+1. Linearity  
+Linear relationship between continious X and the logit of Y.  
+We can check this by looking at whether the interaction term between the predictor and its log transformation is significant.  
+2. Indepence of Errors  
+Just as in ordinary regression, the error must be independet. Thus, the data must be independet. You could not measure the same people at different points in time  
+3. Multicollinearity  
+Predictors should not be correlated too highly (check with VIF statistics, eigenvalues of the scaled uncentred cross-products matrix)
+
+## Outliers:
+- standardized residuals: 
+    - No more than 5% should have absolute values >2
+    - No more than 1% should have absolute values >2.5
+    - Absolute values >3 could be outlier
+- Calculate average leverage (k+1)/N and look for values > 2(or 3)* the average leverage
+- Look for absolute values of DFBeta>1
+
+
+## Problems that can occur
+1. Incomplete information  
+If you have different categorial variables to predict Y but you miss combinations of variables, then this can lead to very high SE of the coefficients. Watch out how complete the information in the dataset is and always look at the SE.
+2. Complete separation  
+If Y can be perfectly predicted by an IV or a combination of IVs, standard errors get very large. 
+
+
+## Lecturer
+- Need 50 participants per predictor
+- No distributional assumptions
+
+## Lecture Logistic Regression Bill
+- LL tell you how much you can NOT explain
+- Durban Watson for independence of errors
+- VIF, standardize
+- linearity only for continuous precdictors
+
+#### Lost and maybe build in
+
+* To apply ML, we need a _likelihood function_ delivers the _maximum likelihood_ estimators, denoted as $\hat{\beta}$.
+
+
+
+Thanks to @Hosmer2000, @Field2012, @Gelman2007
+

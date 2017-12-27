@@ -1,0 +1,31 @@
+```{r}
+library(car)
+head(mtcars)
+df <- mtcars
+df$cyl <- as.factor(mtcars$cyl)
+mean(df$mpg)
+lm.fit <- lm(mpg ~ 1, df)
+summary(lm.fit)
+```
+
+
+```{r}
+lm.fit2 <- lm(mpg ~ cyl,df)
+SST <- sum((df$mpg-mean(df$mpg))^2)
+RSS <- sum((df$mpg-lm.fit2$fitted.values)^2)
+SSM <- sum((lm.fit2$fitted.values-mean(df$mpg))^2)
+print(SST)
+print(RSS)
+print(SSM)
+print(SST-RSS)
+summary(lm.fit2)
+lm.fit3 <- lm(mpg ~ cyl + hp, df)
+summary(lm.fit3)
+lm.fit4 <- lm(mpg ~ cyl + disp + hp + drat + wt +qsec + vs +am +gear +carb, df)
+summary(lm.fit4)
+vif(lm.fit4)
+
+mean(SSM)/mean(RSS)
+summary(lm.fit2)
+
+```

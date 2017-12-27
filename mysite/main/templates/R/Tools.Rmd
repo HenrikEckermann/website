@@ -1,0 +1,11 @@
+---
+title: "Tools"
+output: html_notebook
+---
+
+### Importing data from SPSS
+```{r}
+library(foreign)
+read.spss('filename.sav',to.data.frame = T)
+```
+

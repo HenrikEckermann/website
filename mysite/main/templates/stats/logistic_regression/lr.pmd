@@ -1,0 +1,61 @@
+---
+title: "Logistic Regression in Python"
+author: "Henrik Eckermann"
+date: "23.12.2017"
+bibliography: 'Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/BibTex/statistics.bib'
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+```{python}
+#Load modules
+%pylab inline
+import pandas as pd 
+from plotnine import *
+import os
+from sklearn.linear_model import LogisticRegression
+from sklearn.cross_validation import train_test_split
+```
+
+```{python}
+#import dataset
+os.chdir('/Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/Block 2/Analyzing in R/Week 4/logistic_regression')
+chdage = pd.read_csv('chdage.csv')
+df = chdage
+df = df.iloc[:,1:5]
+#Describe predictors by outcome
+df.loc[:,['age','chd']].groupby('chd').describe()
+#outcome = pd.get_dummies(chdage.chd, prefix='chd')
+#df.chd = outcome.chd_Yes
+```
+
+
+```{python}
+#Counts per outcome
+(ggplot(df, aes(x='chd'))
+  + geom_histogram())
+```
+
+
+```{python}
+#comparison of predictor age per outcome
+(ggplot(chdage, aes(x='chd', y='age'))
+  + geom_violin(trim=True)
+  + geom_boxplot(width=0.2))
+```
+
+
+```{python}
+df.head()
+import statsmodels.api as sm
+df.loc[df.chd=='yes', 'chd'] = 1
+df.loc[df.chd!='yes', 'chd'] = 0
+df.chd = pd.Categorical(df.chd)
+logit_model = sm.Logit(df['chd'], df['age'])
+result = logit_model.fit()
+result.summary2()
+```
+
+
+
+
+

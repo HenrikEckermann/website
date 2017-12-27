@@ -1,0 +1,400 @@
+---
+title: "Logistic Regression in R"
+author: "Henrik Eckermann"
+date: "23.12.2017"
+bibliography: '/Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/BibTex/statistic.bib'
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, warning=FALSE, message=FALSE)
+```
+
+
+$\epsilon$ = error term of a model  
+OLS = Ordinary least squares  
+ML = Maximum Likelihood  
+
+
+## The logistic regression model
+When the outcome variable is dichotomous, we can use logistic regression instead of linear regression. Since the relationship between the predictors and the outcome cannot be linear with a dichotomous outcome, a link function is used as illustrated below. Different books use different equations/descriptions for the logistic regression model. This can be confusing sometimes but they all refer to either the probability that y=1, given the predictor(s) X or they refer to the expected value of Y, given X:  
+
+@Hosmer2000:  
+$E(Y|x) = \pi(x) = \frac{e^{\beta_0+\beta_1x}}{1+e^{\beta_0+\beta_1x}}$  
+˘
+
+$g(x) = ln [\frac{\pi(x)}{1-\pi(x)}] = \beta_0+\beta_1x$  (what is this?)
+
+@Field2012:  
+$P(Y) = \frac{1}{1+e^{-(b_0+b_1X_1 +b_2X_2 + ... b_iX_i)}}$
+
+@James2013:  
+$P(Y|X) = \frac{e^{a+b_1X_1+...+b_pX_p}}{1+e^{a+b_1X_1+...+b_pX_p}}$
+
+@Gelman2007:  
+$Pr(y_i = 1) = logit^{-1}(X_i\beta)$  &rarr; $Pr(y_i = 1) = logit^{-1}(\beta_0 + \beta_1X_1 + ...\beta_iX_i)$
+
+The function $logit^{-1}(x) = \frac{e^x}{1+e^x}$ transforms continuous values to the range (0,1). Thus, using this function for the linear function $X_i\beta$ results in the  equation used by @James2013. @Gelman2007 prefer to work with $logit^{-1}$ because it focuses on the mapping from the linear predictor to the probabilities, rather than the reverse. To clarify this further, they once more write this up in a different way:  
+
+$Pr(y=1) = p_i$ and  $logit(p_i) = X_i\beta$  
+
+
+## Comparison with linear regression  
+In linear regression, the outcomes are assumed to be normally distributed with an  $E(Y|X)$, thus the mean is conditional on the observations. Subtracting that mean would result in the error term $\epsilon$, which is assumed to be independent of the predictor variables X and to follow a normal distribution with $\mu=0$ and similar variance $\sigma^2$ across all observations. In logistic regression, the observations $y\in\{0,1\}$  are assumed to follow a Bernoulli distribution, again with an $mean= E(Y|X)$. $E(Y|X)$ for a Bernoulli random variable is the probability $p$ of the event happening. There is no common error distribution that independent of the predictor values. For the prediction of $y_i$ given predictor(s) $X_i$, the error is $1-\pi$ occurring with probability $\pi$, and $0-\pi$ occurring with probability $1-\pi$.  
+To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimizes $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the us assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
+Despite these differences, the general principles that guide us when we perform linear regression also guide us through logistic regression.
+
+```{r echo=FALSE}
+#Load datasets
+library(aplore3)
+setwd('/Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/Block 2/Analyzing in R/Week 4/logistic_regression')
+df <- chdage
+#Fitting model
+head(df)
+model <- glm(chd ~.,family=binomial(link='logit'),data=df[,c('chd', 'age')])
+summary(model)
+```
+
+
+
+## Interpreting the coefficients
+
+We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ @arm2016 that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $\beta_i$ (holding other predictors constant) would always lead to a change of the slope $\beta_i$ in $\hat{y}$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity.
+
+```{r}
+library(arm)
+##Example 1: 
+#A change of ßX of ~.4 is equivalent to a 10% change in P(Y|X):
+print(logit(0.5))
+print(logit(0.6))
+print(logit(0.5)-logit(0.6))
+# or when we get near the boundaries (here 1) to a change of 3%:
+print(logit(0.9))
+print(logit(0.93))
+print(logit(0.9)-logit(0.93))
+```
+
+In the example of the book, the model is $logit^-1 = -1.4+0.33X$. Thus, a one unit change in x, corresponds to a 0.33 positive change in the logit of the probability of Y. In this example the mean $\bar{x}$ is 3.1. To better grasp what this means, we can for example look at how a one unit change in x near the mean (e.g. one unit change from 3 to 2) changes P(Y|x). Here, this results in a change of ~ 8% (see @Gelman2007 for content of that example, but I will present a full example further below).
+
+```{r}
+##Example 2:
+#A 1 unit change in x (here from 3 to 2) results in a change in P(Y|X) of:
+p_change <- invlogit(-1.4+0.33*3) - invlogit(-1.4+0.33*2)
+print(p_change)
+# A 1 unit change (here from 1 to 2) results in a change in P(Y|X) of:
+p_change_2 <- invlogit(-1.4+0.33*1) - invlogit(-1.4+0.33*2)
+print(p_change_2)
+```
+
+```{r}
+#Evaluate P(Y|x) at the mean
+#invlogit(coef(fit.1)[1] + coef(fit.1)[2]*mean(income))
+```
+
+@Gelman2007 also show that you could calculate the slope at one point for interpretation. More applicable I found the following rule of thumb: Divide $ß_i$ by 4 to get the maximum change in probability for one unit change in the corresponding x. This upper bound is a reasonable approximation (only) near the midpoint of the logistic curve where P(Y|X) is close to 0.5. Another way of interpretation is using the **odds ratio**. The odds of an event are $\frac{p}{1-p}$. The ratio of two odds is called the odds ratio. An exponentiated logistic regression coefficient can be interpreted as an odds ratio and the change in odds resulting from a unit change in the corresponding predictor. If the odds ratio >1, then the odds get higher with a unit increase of the predictor and vice versa. This has implications also for the interpretation of the confidence intervals of the odds ratio. Not zero but one is the critical value here.
+
+$log(\frac{Pr(y=1|x)}{Pr(y=0|x)}) =\alpha + \beta x$
+
+## Example
+Let us now consider the example that @Gelman2007 present in their book. The following measures have been taken to predict whether people living in Bangladesh switch well due to arsenic levels:  
+
+
+
+```{r}
+setwd('/Users/henrikeckermann/Documents/Books/Extra/arm/ARM_Data/arsenic')
+#import dataset
+df <- read.table('wells.dat')
+df$dist100 <- df$dist/100
+head(df)
+```
+Switch = Whether or not a household switched well  
+Arsenic = Arsenic load of well   
+Dist = Distance to the next good well (originally in m but this is rescaled here because the coefficient would be very small, which is misleading here)  
+Assoc =  1 if a household member is in any community organizations   
+Educ = Years of education of well user  
+
+To get an overview of our continuous predictors, lets take a look at their distribution
+```{r}
+library(reshape2)
+df_l <- melt(df,measure.vars=c('dist100', 'arsenic'), id.vars=c('assoc','educ'), value='switch')
+#histogram of predictor distance to nearest safe well
+library(ggplot2)
+ggplot(df_l, aes(value)) +
+  geom_histogram(col='black', fill='white', bins=50) +
+  facet_wrap(~variable)
+```
+
+
+```{r}
+#Fit model and display using display from arm
+library(arm)
+fit_1 <- glm(switch ~ dist100, data= df, family=binomial(link='logit'))
+display(fit_1)
+```
+
+Thus, our model is:
+$P(switch=1|dist) = logit^{-1}(0.61 -0.62*dist100)$
+
+```{r}
+#Plot fitted model
+df$fitted <- fit_1$fitted.values
+ggplot(df, aes(x=dist, y=fitted)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  geom_jitter(data=df, aes(y=switch), alpha=0.3, height=0.05)
+```
+
+The intercept can be interpreted as follows:  
+$P(switch=1|dist=0) = logit^{-1}(0.61-0.62*0) = logit^{-1}(0.61) =$ `r invlogit(0.61)`. Remember also the divide by 4 rule: $0.62/4 =$ `r -0.62/4`, thus, a change in dist100 of of 1 (100m) will lead maximal to a reduction of `r -0.62/4` in P(switch=1|dist100) and that most accurate near the mean of dist100 `r mean(df$dist)`. Looking at the significance of the coefficient of dist100 we see that it is highly significant. The standard error is small compared to the coefficient:
+
+
+```{r}
+#Add Arsenic
+fit_2 <- glm(switch ~ dist100 +arsenic, data=df, family=binomial(link='logit'))
+display(fit_2)
+```
+
+Again, quickly interpreting with the divide by four rule, we notice that the change in P(Y|X) is maximal `r (coef(fit_2)[2]/4)*100`% for dist100 and `r (coef(fit_2)[2]/4)*100`% for arsenic. Important: It seems as if distance is a more important predictor. However, we need to consider that the standard deviation of dist100 is `r sd(df$dist100)` whereas arsenic has a higher standard deviation of `r sd(df$arsenic)`. Multiplying the coefficients by the standard deviation of the corresponding variable yields how much their contribute in 1-SD differences (dist100 = -0.34, arsenic = 0.51). Dividing by 4 again shows how much a 1-SD change would influence the P(switch=1) (8% vs 13%).
+
+Plotting two predictors could be done using a 3-dimensional plot but I follow the advice of @Gelman2007 that these are difficult to read and that it is a better idea to make two plots where we show different lines corresponding to fixed reasonable values for the other predictor variable:
+
+```{r}
+#Write function that creates fitted values with one var hold constant
+line_2pred <- function(x, x_two,fitted_model, i, j){
+  return(invlogit(coef(fitted_model)[i]*x + x_two*coef(fitted_model)[j]))
+}
+#Create fitted values for arsenic = 0.5&1
+df$line_1 <- line_2pred(df$dist100, 0.5, fit_2, 2,3)
+df$line_2 <- line_2pred(df$dist100, 1, fit_2,2,3)
+
+#Plot fitted model for dist vs fitted
+ggplot(df, aes(x=dist100)) +
+  geom_jitter(data=df, aes(y=switch), alpha=0.2, height=0.05) +
+  geom_smooth(data=df, aes(x=dist100, y=line_1, color='blue'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  geom_smooth(data=df, aes(x=dist100, y=line_2, color='red'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  scale_colour_manual(name = 'Arsenic level', values =c('blue'='blue','red'='red'), labels = c('0.5','1')) +
+  xlab('Distance in 100m')+ylab('P(switch)')
+```
+
+```{r}
+#Same now for distance fixed
+df$line_3 <- line_2pred(df$arsenic, 0, fit_2, 3,2)
+df$line_4 <- line_2pred(df$arsenic, 0.5, fit_2,3,2)
+
+#Plot fitted model
+ggplot(df, aes(x=arsenic)) +
+  geom_jitter(data=df, aes(y=switch), alpha=0.2, height=0.05) +
+  geom_smooth(data=df, aes(x=arsenic, y=line_3, color='blue'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  geom_smooth(data=df, aes(x=arsenic, y=line_4, color='red'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  scale_colour_manual(name = 'Distance', values =c('blue'='blue','red'='red'), labels = c('0','50m')) +
+  xlab('Arsenic levels')+ylab('P(switch)')
+```
+
+
+#### Interactions
+
+
+```{r}
+fit_3 <- glm(switch ~ dist100 + arsenic+ dist100:arsenic, family=binomial(link='logit'),df)
+display(fit_3)
+```
+$X_1 =$ &rarr; dist100  
+$X_2 =$ &rarr; arsenic  
+
+$P(switch|X) = logit^{-1}(-0.15 - 0.58X_1 + 0.56X_2 - 0.18X_2X_3)$
+
+We cannot interpret the intercept here since it refers to dist100=0 but also arsenic=0 and there is no well with arsenic=0 among the dangerous wells. The same is true for $X_1$: We should not interpret it at $X_2=0$ but rather check the value for the mean of $X_2$, which is 1.66. Therefore, at mean levels of arsenic, the distance coefficient is $-0.58 -0.18*1.66=-0.88$. This divided by 4 yields the maximum change in P(switch=1) of ~22% at arsenic levels of 1.66. Similarly, $X_2$ we better interpret at a average distance, thus $0.56-0.18*0.48=0.47$. Divided by 4 we get 0.12 &rarr; at the mean distance, a 1 unit increase of arsenic corresponds to ~12% increase in P(switch=1). The interaction we can interpret as follows: With increasing arsenic levels distance gets a stronger predictor. Or: For higher distances, arsenic becomes less important as a predictor.  
+
+Now, we will see why centering makes interpretation simpler:  
+
+```{r}
+centered <- scale(df[,c('dist100','arsenic')], center=T, scale=F)
+colnames(centered) <- c('c_dist100', 'c_arsenic')
+df <- cbind(df, centered)
+fit_4 <- glm(switch ~ c_dist100 + c_arsenic+ c_dist100:c_arsenic, family=binomial(link='logit'),df)
+display(fit_4)
+```
+
+As we can see, now we can directly apply the divide by 4 rule and interpret the coefficients since we directly get values that we had to calculate above! Additionally, the intercept now corresponds to $P(switch|\hat{x_2}\hat{x_3}) = logit^{-1}(35)= 0.59$. @Gelman2007 suggest to keep the interaction in the model despite it not being significant. We can see that it is almost significant and importantly, it makes sense that the coefficient is negative and also the magnitude makes sense. Therefore, we keep it in the model! We plot the interaction in the same way as before:
+
+```{r}
+#Write function for plotting
+fun_2 <- function(coef_1,coef_2, coef_3, coef_4, x_2, x_3){
+  return(invlogit(coef_1 + coef_2*x_2 + coef_3*x_3 + coef_4*x_2*x_3))
+}
+
+#Create fitted values
+coefs <- coef(fit_4)
+df$line_5 <- fun_2(coefs[1], coefs[2], coefs[3], coefs[4], df$dist100, 0.5)
+df$line_6 <- fun_2(coefs[1], coefs[2], coefs[3], coefs[4], df$dist100, 1)
+df$line_7 <- fun_2(coefs[1], coefs[2], coefs[3], coefs[4], 0, df$arsenic)
+df$line_8 <- fun_2(coefs[1], coefs[2], coefs[3], coefs[4], 0.5, df$arsenic)
+#Plot 1: P(switch) as function of distance to nearest safe well and arsenic level of existing well for the model with interaction
+ggplot(df, aes(x=dist100)) +
+  geom_jitter(data=df, aes(y=switch), alpha=0.2, height=0.05) +
+  geom_smooth(data=df, aes(x=dist100, y=line_5, color='blue'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  geom_smooth(data=df, aes(x=dist100, y=line_6, color='red'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  scale_colour_manual(name = 'Arsenic', values =c('blue'='blue','red'='red'), labels = c('0.5','1')) +
+  xlab('Distance')+ylab('P(switch)')
+```
+
+```{r}
+#Plot
+ggplot(df, aes(x=arsenic)) +
+  geom_jitter(data=df, aes(y=switch), alpha=0.2, height=0.05) +
+  geom_smooth(data=df, aes(x=arsenic, y=line_7, color='blue'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  geom_smooth(data=df, aes(x=arsenic, y=line_8, color='red'),method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  scale_colour_manual(name = 'Distance', values =c('blue'='blue','red'='red'), labels = c('0','50m')) +
+  xlab('Arsenic')+ylab('P(switch)')
+```
+
+
+Obviously, the interaction is not strong.
+
+
+#### Adding Social Predictors
+We add educ and assoc to the model and use $educ/4$ since it makes the regression coefficient more interpretable (it then represents the predictice difference of adding four years of education):  
+
+```{r}
+df$educ4 <- df$educ/4
+fit_5 <- glm(switch ~ c_dist100 * c_arsenic + assoc + educ4 , family = binomial(link='logit'), df)
+display(fit_5)
+```
+
+Assoc is not statistically significant, which is surprising. Because of the non-significance and because it does not make much sense, we remove this predictor. However, educ4 is significant and for every 4 years of difference in education, there is a change of roughly`r (0.17/4)*100`% in P(switch). So, we end up with:
+
+```{r}
+fit_6 <- glm(switch ~ c_dist100 * c_arsenic + educ4 , family = binomial(link='logit'), df)
+display(fit_6)
+```
+
+Finally and interestingly, @Gelman2007 mention that they it is their general practice to include their interactions as well. I will do this in the next step:
+
+```{r}
+#center educ4
+df$c_educ4 <-  scale(df$educ4, center=T, scale=F)
+fit_7 <- glm(switch ~ c_dist100 + c_arsenic + c_educ4 + c_dist100:c_arsenic + c_dist100:c_educ4+ c_arsenic:c_educ4 , family = binomial(link='logit'), df)
+display(fit_7)
+```
+It makes sense that education reduces the negative association between dist100 and the P(switch) and also that the association between arsenic and P(switch) gets slightly stronger with an increase in education. (Finally, @Gelman2007 bring in that we should think about standardizing all the predictors as a default option when fitting models with interactions.)
+
+## Evaluation of a fitted  logistic regression
+To check whether the model is significant we check whether the model with the predictor leads to more accurate predictions than the model without the predictor. We look at the relative fit to evaluate whether one models fits better than the other. Again I use the comparison to linear regression to illustrate the procedure:  
+In linear regression, the baseline model only has the intercept $\beta_0$, which is the mean of the outcome variable. When used as an estimator, we can calculate the variance of the observed values from this baseline estimator. This variance is called the **_total sum of squares_** (SST). We calculate it as shown below. The total sum of squares can be partitioned into the **residual sum of squares** (RSS) and the **model Sum of Squares** (SSM), which you find in an _analysis of variance table_.
+
+**Total sum of squares (SST)**:  
+$SST = \sum_{i=1}^n (y_i-\bar{y})^2$  
+
+**Residual sum of squares(RSS)** or **Sum of squared errors (SSE)**:  
+$RSS = \sum_{i=1}^n (y_i - \hat{y}_i)^2$  
+
+**Model Sum of Squares (SSM)** or: **Regression sum of squares (SSR)**:  
+$SSM = SST - RSS = [\sum_{i=1}^n (y_i - \bar{y}_i)^2] - [\sum_{i=1}^n (y_i-\hat{y}_i)^2]$
+
+If we have no predictors in the model, then RSS = SST. And if RSS gets smaller with the inclusion of a predictor, then this is because the predictor explains some of the total variance around the base model and is possibly a better estimate than the mean. It should be clear from the above equation that SSM reflects the part of SST that the new model (the fitted regression line) can explain whereas RSS reflects the leftover that it still cannot explain. In ANOVA, the new model would be the group means of the outcome variable for each group given by the independent variable. 
+
+#### Log-likelihood, deviance and log-likelihood ratio
+Analogous to RSS, in logistic regression, deviation of observed to predicted values is reflected by the **log-likelihood** (LL):  
+
+$LL =\sum_{i=1}^N[Y_iln(\hat{Y_i}) + (1-Y_i)ln(1-\hat{Y_i})]$  
+
+The LL tells how much unexplained information there is after the model has been fitted. The larger the LL, the more unexplained information. We can therefore use the LL to compare models. In practice however, instead of the LL, we use the **deviance** (D) since this statistic follows a $\chi^2$ distribution and therefore allows hypothesis testing:  
+
+$D = -2* LL$  
+
+@Gelman2007 points out what we should know about deviance as a basis for applying it to logistic regression:  
+
+* Deviance is a measure of error and lower deviance means better fit to data
+* If we would add a predictor that is random noise, then the deviance is expected to decrease by 1 whereas we would expect it to decrease by >1 with an informative predictor (1 per predictor)
+
+
+@Hosmer2000 emphasizes that we can think of the deviance in the same way as we think of the RSS in the context of testing the significance of a model. To compare two models, we look at their difference in the deviance by calculating the **likelihood-ratio**, which follows the $\chi^2$ distribution:
+
+$\chi^2 = -2*LL_{baseline}-(-2*LL_{new})$, with  $df = k_{new} -k_{baseline}$,  
+
+where k is the number of parameters in the model. In the baseline model with no predictors, there is 1 parameter (intercept). If the $\chi^2$ statistic is significant, then the model with the added predictor explains the outcome better than the baseline model. Whereas in linear regression the baseline model is the mean, in logistic regression the baseline model with only the intercept predicts the score with the highest frequency in the dataset.
+
+
+```{r}
+#Log-likelihood ratio for model 7 and 6:
+fit_6$deviance - fit_7$deviance
+# to perform the chi-square test, we can use the following package 
+library(lmtest)
+lrtest(fit_7, fit_6)
+```
+
+We see that the model is a significantly better fit. However, @Gelman2007 does not use this test in his book. He instead applies the above mentioned guidelines and looks at the individual predictors to evaluate usefulness of a model.
+
+#### Error rate 
+```{r echo=F}
+df$fitted7 <- fit_7$fitted.values
+er_7 <- mean((df$ffitted>0.5 & df$switch==0) | (df$ffitted<0.5 & df$switch==1))
+er_7
+er_base <- 1- mean(df$switch)
+```
+The error rate is the rate of incorrectly predicted values. The base model always predicts the most frequent outcome. In this case, this is `r er_7*100`%. If the error rate of the fitted model is similar, it is useless. The best possible error rate is 0. In this case, the error rate is 36% and that is not very impressive. Keep in mind that the error rate does not catch differences between 0.9 and 0.51 since both would be predicted as 1. Still it is a practical measure that is easy to interpret.
+
+#### Average predictive difference
+We can compare the average difference in predicted P(Y=1|X). In the example below this is illustrated with a simpler logistic regression model of the above example. #1 shows the average predictive difference between households that are 0 or 100m away from the next safe well. #2 shows the average predictive difference for between arsenic levels of 1 and 0.5. The general notation for that is:  
+
+$\Delta(u^{hi},u^{low}) = \frac{1}{n}\sum_{i=1}^n\delta(u^{hi},u^{low},v_i,\beta)$  
+
+And $\delta$ here is:  
+
+$\delta(u^{hi},u^{low},v_i,\beta) = P(y=1|u^{hi},v,\beta) - P(y=1|u^{lo},v,\beta)$, 
+ 
+
+where _u_ corresponds to the variable we want to compare at two levels whereas _v_ and $\beta$ and correspond to the input of the data and coefficients as shown in the example below:  
+
+```{r}
+#1
+fit_8 <- glm(switch ~ dist100 + arsenic + educ4, family = binomial(link='logit'), df)
+b <- coef(fit_8)
+hi <- 1
+lo <- 0
+delta <- invlogit(b[1] + b[2]*hi + b[3]*df$arsenic + b[4]*df$educ4) - 
+         invlogit(b[1] + b[2]*lo + b[3]*df$arsenic + b[4]*df$educ4)
+m_p_diff_1 <- mean(delta)
+#2
+hi <- 1
+lo <- 0.5
+delta <- invlogit(b[1] + b[2]*df$dist100 + b[3]*hi + b[4]*df$educ4) - 
+         invlogit(b[1] + b[2]*df$dist100 + b[3]*lo + b[4]*df$educ4)
+m_p_diff_2 <- mean(delta)
+m_p_diff_2
+```
+#### Wald statistic
+The Wald statistic is analogous to the t-statistic in linear regression: Does the corresponding predictor contribute?  
+ $Wald=\frac{b}{SE_b}$  
+ 
+Since @Hosmer2000 report that it can be unreliable under certain circumstances and @Gelman2007 doesn't even mention it (though he uses the z-value for loose interpretation), I won't further consider this statistic but rely on the log-likelihood ratio test for significance testing.  
+
+#### Binned residuals
+I could not reproduce the plot as shown in the book quickly. 
+```{r}
+binnedplot(fit_7$fitted.values, fit_7$residuals)
+```
+
+## Problems
+Potential issues that can arise when fitting a logistic regression model are collinearity and _complete separation_ where a predictor is completely aligned with the outcome. In the latter case, the corresponding coefficient would be $\infty$ or -$\infty$. The latter could be handled using the Bayesian or penalized-likelihood approach. I will address collinearity at a later time when I will reconsider it for linear regression. But we can check it using the _variance inflation factor_. Another issue can be _incomplete information_: If you have different categorial variables to predict Y but you miss combinations of variables, then this can lead to very high SE of the coefficients. You need ~50 participants per predictor. Therefore, watch out how complete the information in the dataset is and always look at the SE.
+
+## What @Gelman2007 did not discuss (explicitly) in their chapter about linear regression but was mentioned in the lectures or the book of @Field2012
+
+#### Assumptions
+1. Linearity  
+Linear relationship between continuous X and the logit of Y.  
+We can check this by looking at whether the interaction term between the predictor and its log transformation is significant.  
+2. Independence of Errors  
+Just as in ordinary regression, the error must be independent. Thus, the data must be independent. Check _Durban Watson Test_. @Gelman2007 mentions in the chapter about linear regression that this assumption is mostly important if we want to make predictions.
+3. Multicollinearity  
+Predictors should not be correlated too highly (check with VIF statistics, eigenvalues of the scaled uncentered cross-products matrix)
+​
+#### Outliers:
+- standardized residuals: 
+    - No more than 5% should have absolute values >2
+    - No more than 1% should have absolute values >2.5
+    - Absolute values >3 could be outlier
+- Calculate average leverage (k+1)/N and look for values > 2(or 3)* the average leverage
+- Look for absolute values of DFBeta>1
+​
+
+## References

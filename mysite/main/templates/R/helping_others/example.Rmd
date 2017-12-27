@@ -1,0 +1,97 @@
+---
+title: "Example Random Number Generators"
+output: html_document
+---
+
+```{r setup, include=FALSE,warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+##### The following functions will generate 30 numbers that are drawn out of a random normal distribution. Both are drawn from a similar distribution with the same parameters $\mu=10$ and $\sigma=4$. However, as number are drawn randomly out of a infinite amount of numbers, they will always differ as you can see in the plots that follow:
+```{r}
+rnn <- rnorm(mean = 10, sd = 4, n = 30)
+rnn2 <- rnorm(mean = 10, sd = 4, n = 30)
+```
+
+##### Make dataframe:
+```{r}
+df <- data.frame(rnn, rnn2)
+```
+
+##### Plots:
+```{r}
+plot_rnn <- ggplot(df, aes(x=rnn)) +
+  geom_density()
+
+plot_rnn2 <- ggplot(df, aes(x=rnn2)) +
+  geom_density()
+plot_rnn
+plot_rnn2
+```
+
+##### Just like if we would draw samples out of a population, the more samples we draw, the more likely that we get closer to the real distributions:
+```{r}
+rnn <- rnorm(mean = 10, sd = 4, n = 10000)
+rnn2 <- rnorm(mean = 10, sd = 4, n = 10000)
+```
+
+##### Make dataframe:
+```{r}
+df <- data.frame(rnn, rnn2)
+```
+
+```{r}
+plot_rnn <- ggplot(df, aes(x=rnn)) +
+  geom_density()
+
+plot_rnn2 <- ggplot(df, aes(x=rnn2)) +
+  geom_density()
+plot_rnn
+plot_rnn2
+```
+
+
+
+##### Now, if you use set.seed(), you can control and get the same number because the random number generator is set to the same seed. So, even though we only draw 30, the distributions are exactly the same:
+
+
+```{r}
+set.seed(50)
+rnn <- rnorm(mean = 10, sd = 4, n = 30)
+set.seed(50)
+rnn2 <- rnorm(mean = 10, sd = 4, n = 30)
+```
+
+##### Make dataframe:
+```{r}
+df <- data.frame(rnn, rnn2)
+```
+
+##### Plots:
+```{r}
+plot_rnn <- ggplot(df, aes(x=rnn)) +
+  geom_density()
+
+plot_rnn2 <- ggplot(df, aes(x=rnn2)) +
+  geom_density()
+plot_rnn
+plot_rnn2
+```
+
+
+##### Finally, there are different random number generators to simulate different distributions. runif simulates a uniform distribution where every number has the same likelihood. For rnorm, of course values around the mean have greated likelihood to be drawn. You can also simulate a binomial distribution, poisson, exponential etc.
+
+```{r}
+unif <- runif(0,30, n= 100)
+binom <- rbinom(100,1,0.5)
+unif
+binom
+```
+
+
+
+
