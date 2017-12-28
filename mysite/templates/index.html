@@ -1,25 +1,18 @@
-<!DOCTYPE html>
-{% extends 'base.html' %}
+<!DOCTYPE html> {% extends 'base.html' %} {% block content %}
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-5">Welcome!</h1>
+    <p class="lead">This will become a website where I present statistical analyses in both Python and R. The goal is to learn for myself but also to create a resource for others who are willing to learn the techniques. </p>
+  </div>
+</div>
 
-  {% block content %}
-    <div class="jumbotron jumbotron-fluid">
-    <div class="container">
-      <h1 class="display-5">Welcome!</h1>
-      <p class="lead">On this website I will present statistical analyses in both Python and R. The goal is to learn for myself but also to create a resource for others who are willing to learn the techniques. </p>
-    </div>
-    </div>
+<div class="container">
+  <a href="{% url 'nbtwo' %}"><h1>Multiple Linear Regression in Python</h1></a>
+  <p>Not finished</p>
+  <br>
+  <a href="{% url 'lr_r' %}"><h1>Logistic Regression in R</h1></a>
+  <p>How to perform logistic regression</p>
 
-    <div class="container">
-      <a href="{% url 'nbtwo' %}"><h1>Multiple Linear Regression in Python</h1></a>
-        <p>In comparison to R I go trough the analysis using Python. (Will be updated) </p>
-      <br>
-      <a href="{% url 'lr_r' %}"><h1>Logistic Regression in R</h1></a>
-        <p>How to perform logistic regression</p>
+</div>
 
-
-
-    </div>
-
-
-
-  {% endblock content %}
+{% endblock content %}
