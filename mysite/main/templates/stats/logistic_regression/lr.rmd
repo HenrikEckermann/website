@@ -1,42 +1,66 @@
 ---
-title: "Logistic Regression in R"
-author: "Henrik Eckermann"
-date: "23.12.2017"
-bibliography: '/Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/BibTex/statistic.bib'
+title: 'Logistic Regression in R'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/BibTex/statistic.bib
 csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
 ---
 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = T, warning=FALSE, message=FALSE)
+library(knitr)
+rmarkdown::render_site
 ```
 
 
+## [Back](http://henrikeckermann.pythonanywhere.com/)
+
+
+#### Abbreviations 
 $\epsilon$ = error term of a model  
 OLS = Ordinary least squares  
 ML = Maximum Likelihood  
 
 
+
 ## The logistic regression model
 When the outcome variable is dichotomous, we can use logistic regression instead of linear regression. Since the relationship between the predictors and the outcome cannot be linear with a dichotomous outcome, a link function is used as illustrated below. Different books use different equations/descriptions for the logistic regression model. This can be confusing sometimes but they all refer to either the probability that y=1, given the predictor(s) X or they refer to the expected value of Y, given X:  
 
-@Hosmer2000:  
-$E(Y|x) = \pi(x) = \frac{e^{\beta_0+\beta_1x}}{1+e^{\beta_0+\beta_1x}}$  
-˘
+<center><b>@Hosmer2000:</b></center>  
 
-$g(x) = ln [\frac{\pi(x)}{1-\pi(x)}] = \beta_0+\beta_1x$  (what is this?)
+$$E(Y|x) = \pi(x) = \frac{e^{\beta_0+\beta_1x}}{1+e^{\beta_0+\beta_1x}}$$
 
-@Field2012:  
-$P(Y) = \frac{1}{1+e^{-(b_0+b_1X_1 +b_2X_2 + ... b_iX_i)}}$
 
-@James2013:  
-$P(Y|X) = \frac{e^{a+b_1X_1+...+b_pX_p}}{1+e^{a+b_1X_1+...+b_pX_p}}$
+$$g(x) = ln [\frac{\pi(x)}{1-\pi(x)}] = \beta_0+\beta_1x$$
 
-@Gelman2007:  
-$Pr(y_i = 1) = logit^{-1}(X_i\beta)$  &rarr; $Pr(y_i = 1) = logit^{-1}(\beta_0 + \beta_1X_1 + ...\beta_iX_i)$
+
+<center><b>@Field2012:</b></center> 
+  
+$$P(Y) = \frac{1}{1+e^{-(b_0+b_1X_1 +b_2X_2 + ... b_iX_i)}}$$
+
+<center><b>@James2013:</b></center>  
+
+$$P(Y|X) = \frac{e^{a+b_1X_1+...+b_pX_p}}{1+e^{a+b_1X_1+...+b_pX_p}}$$
+
+<center><b>@Gelman2007:</b></center> 
+ 
+$$Pr(y_i = 1) = logit^{-1}(X_i\beta)$$ 
+
+<center>&darr; </center> 
+
+ $$Pr(y_i = 1) = logit^{-1}(\beta_0 + \beta_1X_1 + ...\beta_iX_i)$$
 
 The function $logit^{-1}(x) = \frac{e^x}{1+e^x}$ transforms continuous values to the range (0,1). Thus, using this function for the linear function $X_i\beta$ results in the  equation used by @James2013. @Gelman2007 prefer to work with $logit^{-1}$ because it focuses on the mapping from the linear predictor to the probabilities, rather than the reverse. To clarify this further, they once more write this up in a different way:  
 
-$Pr(y=1) = p_i$ and  $logit(p_i) = X_i\beta$  
+$Pr(y=1) = p_i$ and  $logit(p_i) = X_i\beta$ 
+ 
 
 
 ## Comparison with linear regression  
@@ -44,34 +68,22 @@ In linear regression, the outcomes are assumed to be normally distributed with a
 To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimizes $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the us assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
 Despite these differences, the general principles that guide us when we perform linear regression also guide us through logistic regression.
 
-```{r echo=FALSE}
-#Load datasets
-library(aplore3)
-setwd('/Users/henrikeckermann/Documents/workspace/Website/mysite/main/templates/Block 2/Analyzing in R/Week 4/logistic_regression')
-df <- chdage
-#Fitting model
-head(df)
-model <- glm(chd ~.,family=binomial(link='logit'),data=df[,c('chd', 'age')])
-summary(model)
-```
-
-
 
 ## Interpreting the coefficients
 
-We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ @arm2016 that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $\beta_i$ (holding other predictors constant) would always lead to a change of the slope $\beta_i$ in $\hat{y}$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity.
+We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ @arm2016 that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $\beta_i$ (holding other predictors constant) would always lead to a change of the slope $\beta_i$ in $\hat{y}$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity. Comment out the following code and try for yourself:
 
 ```{r}
 library(arm)
 ##Example 1: 
-#A change of ßX of ~.4 is equivalent to a 10% change in P(Y|X):
-print(logit(0.5))
-print(logit(0.6))
-print(logit(0.5)-logit(0.6))
-# or when we get near the boundaries (here 1) to a change of 3%:
-print(logit(0.9))
-print(logit(0.93))
-print(logit(0.9)-logit(0.93))
+## A change of ßX of ~.4 is equivalent to a 10% change in P(Y|X):
+#print(logit(0.5))
+#print(logit(0.6))
+#print(logit(0.5)-logit(0.6))
+## or when we get near the boundaries (here 1) to a change of 3%:
+#print(logit(0.9))
+#print(logit(0.93))
+#print(logit(0.9)-logit(0.93))
 ```
 
 In the example of the book, the model is $logit^-1 = -1.4+0.33X$. Thus, a one unit change in x, corresponds to a 0.33 positive change in the logit of the probability of Y. In this example the mean $\bar{x}$ is 3.1. To better grasp what this means, we can for example look at how a one unit change in x near the mean (e.g. one unit change from 3 to 2) changes P(Y|x). Here, this results in a change of ~ 8% (see @Gelman2007 for content of that example, but I will present a full example further below).
@@ -80,20 +92,19 @@ In the example of the book, the model is $logit^-1 = -1.4+0.33X$. Thus, a one un
 ##Example 2:
 #A 1 unit change in x (here from 3 to 2) results in a change in P(Y|X) of:
 p_change <- invlogit(-1.4+0.33*3) - invlogit(-1.4+0.33*2)
-print(p_change)
 # A 1 unit change (here from 1 to 2) results in a change in P(Y|X) of:
 p_change_2 <- invlogit(-1.4+0.33*1) - invlogit(-1.4+0.33*2)
-print(p_change_2)
+##Generally evaluating P(Y|x) at the mean
+#invlogit(coef(fit.1)[1] + coef(fit.1)[2]*mean(income))
+cat(p_change,',', p_change_2)
 ```
 
-```{r}
-#Evaluate P(Y|x) at the mean
-#invlogit(coef(fit.1)[1] + coef(fit.1)[2]*mean(income))
-```
+
+
 
 @Gelman2007 also show that you could calculate the slope at one point for interpretation. More applicable I found the following rule of thumb: Divide $ß_i$ by 4 to get the maximum change in probability for one unit change in the corresponding x. This upper bound is a reasonable approximation (only) near the midpoint of the logistic curve where P(Y|X) is close to 0.5. Another way of interpretation is using the **odds ratio**. The odds of an event are $\frac{p}{1-p}$. The ratio of two odds is called the odds ratio. An exponentiated logistic regression coefficient can be interpreted as an odds ratio and the change in odds resulting from a unit change in the corresponding predictor. If the odds ratio >1, then the odds get higher with a unit increase of the predictor and vice versa. This has implications also for the interpretation of the confidence intervals of the odds ratio. Not zero but one is the critical value here.
 
-$log(\frac{Pr(y=1|x)}{Pr(y=0|x)}) =\alpha + \beta x$
+$$log(\frac{Pr(y=1|x)}{Pr(y=0|x)}) =\alpha + \beta x$$
 
 ## Example
 Let us now consider the example that @Gelman2007 present in their book. The following measures have been taken to predict whether people living in Bangladesh switch well due to arsenic levels:  
@@ -105,13 +116,15 @@ setwd('/Users/henrikeckermann/Documents/Books/Extra/arm/ARM_Data/arsenic')
 #import dataset
 df <- read.table('wells.dat')
 df$dist100 <- df$dist/100
-head(df)
+kable(head(df))
 ```
-Switch = Whether or not a household switched well  
-Arsenic = Arsenic load of well   
-Dist = Distance to the next good well (originally in m but this is rescaled here because the coefficient would be very small, which is misleading here)  
-Assoc =  1 if a household member is in any community organizations   
-Educ = Years of education of well user  
+
+
+_Switch_: Whether or not a household switched well  
+_Arsenic_: Arsenic load of well   
+_Dist_: Distance to the next good well (originally in m but this is rescaled here because the coefficient would be very small, which is misleading here)  
+_Assoc_:  1 if a household member is in any community organizations   
+_Educ_: Years of education of well user  
 
 To get an overview of our continuous predictors, lets take a look at their distribution
 ```{r}
@@ -197,8 +210,8 @@ ggplot(df, aes(x=arsenic)) +
 fit_3 <- glm(switch ~ dist100 + arsenic+ dist100:arsenic, family=binomial(link='logit'),df)
 display(fit_3)
 ```
-$X_1 =$ &rarr; dist100  
-$X_2 =$ &rarr; arsenic  
+$X_1$ &rarr; dist100  
+$X_2$ &rarr; arsenic  
 
 $P(switch|X) = logit^{-1}(-0.15 - 0.58X_1 + 0.56X_2 - 0.18X_2X_3)$
 
@@ -327,9 +340,9 @@ We see that the model is a significantly better fit. However, @Gelman2007 does n
 #### Error rate 
 ```{r echo=F}
 df$fitted7 <- fit_7$fitted.values
-er_7 <- mean((df$ffitted>0.5 & df$switch==0) | (df$ffitted<0.5 & df$switch==1))
-er_7
+er_7 <- mean((df$fitted7>0.5 & df$switch==0) | (df$fitted7<0.5 & df$switch==1))
 er_base <- 1- mean(df$switch)
+cat(er_7, er_base)
 ```
 The error rate is the rate of incorrectly predicted values. The base model always predicts the most frequent outcome. In this case, this is `r er_7*100`%. If the error rate of the fitted model is similar, it is useless. The best possible error rate is 0. In this case, the error rate is 36% and that is not very impressive. Keep in mind that the error rate does not catch differences between 0.9 and 0.51 since both would be predicted as 1. Still it is a practical measure that is easy to interpret.
 
@@ -377,7 +390,7 @@ binnedplot(fit_7$fitted.values, fit_7$residuals)
 ## Problems
 Potential issues that can arise when fitting a logistic regression model are collinearity and _complete separation_ where a predictor is completely aligned with the outcome. In the latter case, the corresponding coefficient would be $\infty$ or -$\infty$. The latter could be handled using the Bayesian or penalized-likelihood approach. I will address collinearity at a later time when I will reconsider it for linear regression. But we can check it using the _variance inflation factor_. Another issue can be _incomplete information_: If you have different categorial variables to predict Y but you miss combinations of variables, then this can lead to very high SE of the coefficients. You need ~50 participants per predictor. Therefore, watch out how complete the information in the dataset is and always look at the SE.
 
-## What @Gelman2007 did not discuss (explicitly) in their chapter about linear regression but was mentioned in the lectures or the book of @Field2012
+## Not covered in detail
 
 #### Assumptions
 1. Linearity  
@@ -398,3 +411,9 @@ Predictors should not be correlated too highly (check with VIF statistics, eigen
 ​
 
 ## References
+
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+
+
