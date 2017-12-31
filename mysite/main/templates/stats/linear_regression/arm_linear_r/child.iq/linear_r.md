@@ -16,7 +16,7 @@ csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa
 ## Introduction
 Linear regression is a method that provides the average outcome value, given a single or several predictors. We will see throughout this article what exactly that means. I want to note that this is not a complete introductory article. Instead I made some notes of the points that were either most important or new for me when I read the book chapter about linear regression of the book of @Gelman2007. The focus lies on the application and interpretation of multiple linear regression analysis and the practice of  fitting a linear models in Python, I will present an example that @Gelman2007 show in their book and solve a few exercises in the end. Not all question can be answered but I might edit this article over time. So let's start by remembering the basic model of linear regression:
 
-$$\hat{y} = \beta_0 + \beta_1X_1 + \epsilon$$  
+$$\hat{y} = \beta_0 + \beta_1X_1 + \beta_2X_2 ... + \beta_pX_p + \epsilon$$  
 where $\epsilon$ are independent and ~$N(0,\sigma^2)$  
 
 ## 10 Notes about linear regression 
