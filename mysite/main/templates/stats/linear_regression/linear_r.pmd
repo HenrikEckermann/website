@@ -121,7 +121,7 @@ The outcome must have a linear relationship with the predictors. In case violate
 **7.3 Independence of errors**  
 The errors need to be independent. This will be discussed in a later chapter in detail. @Field2012 gives an example: Imagine the distance how far subjects live away from a toxic substance that influences the measured variables differs between subjects. In that cases the error depends on that distance. The Durbin-Watson statistic is a measure of independence of the error and should lie between 1-3, optimally at 2. For time-series data (or with the distance example): Plot errors as a function of time (distance) and look for patterns (e.g. difference in variance across x-axis or curve pattern of the residuals). Generally, indepence of error is achieved by a solid experimental design.  
 **7.4 Equal variance of errors**  
-As already mentioned above, the assumption of the linear regression model is: $\epsilon$ ~ $N(0,\sigma^2)$. The variance of the residuals should be constant (homoscedasticity).
+As already mentioned above, the assumption of the linear regression model is: $\epsilon$ ~ $N(0,\sigma^2)$. The variance of the residuals should be constant (homoscedasticity).  
 **7.5 Normality of errors**       
 This is a point, where the book of @Gelman2007 stands out to other books about the topic. Normality of residuals is considered barely important when estimation of the line is the purpose (as compared to predction of individual data points).
 
