@@ -10,8 +10,8 @@ class IndexView(TemplateView):
 class Lr_rView(TemplateView):
     template_name = 'stats/logistic_regression/lr_r.html'
 
-class NbViewTwo(TemplateView):
-    template_name = 'stats/linear_regression/HW2_P.html'
+class Linear_rView(TemplateView):
+    template_name = 'stats/linear_regression/linear_r.html'
 
 class MidtermView(TemplateView):
     template_name = 'Blok 1/Multivariate Statistics/Midterm/mid-term.html'
