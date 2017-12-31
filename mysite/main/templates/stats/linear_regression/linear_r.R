@@ -1,0 +1,7 @@
+setwd('/Users/henrikeckermann/Documents/workspace/website/mysite/main/templates/stats/linear_regression/arm_linear_r/child.iq')
+library(foreign)
+df <- read.dta('child.iq.dta')
+head(df)
+df2 <- read.dta('kidiq.dta')
+head(df2)
+write.csv(df2, 'child_python.csv')

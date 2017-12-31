@@ -116,7 +116,7 @@ setwd('/Users/henrikeckermann/Documents/Books/Extra/arm/ARM_Data/arsenic')
 #import dataset
 df <- read.table('wells.dat')
 df$dist100 <- df$dist/100
-kable(head(df))
+head(df)
 ```
 
 
@@ -409,6 +409,125 @@ Predictors should not be correlated too highly (check with VIF statistics, eigen
 - Calculate average leverage (k+1)/N and look for values > 2(or 3)* the average leverage
 - Look for absolute values of DFBeta>1
 ​
+
+
+
+## Exercises
+
+##### 1. Plotting exercise   
+@Gelman2007 advice to plot this WITHOUT using a computer. If you want to do this for yourself first, then scroll down slowly so that you only can see the task, plot it and then you can compare:     
+
+###### (a) Pr(y = 1) = logit−1(x)  
+
+```{r}
+library(arm)
+library(ggplot2)
+x <- runif(100000, -7.5, 7.5)
+y <- invlogit(x)
+data <- data.frame(x,y)
+ggplot(data, aes(x,y)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
+```
+
+###### (b) Pr(y = 1) = logit−1(2 + x) 
+
+```{r}
+y <- invlogit(2+x)
+data <- data.frame(x,y)
+ggplot(data, aes(x,y)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
+```
+
+###### c) Pr(y = 1) = logit−1(2x)   
+
+```{r}
+y <- invlogit(2*x)
+data <- data.frame(x,y)
+ggplot(data, aes(x,y)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
+```
+ 
+###### (d) Pr(y = 1) = logit−1(2 + 2x)  
+
+```{r}
+y <- invlogit(2+2*x)
+data <- data.frame(x,y)
+ggplot(data, aes(x,y)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
+```
+
+###### (e) Pr(y = 1) = logit−1(−2x)  
+
+```{r}
+y <- invlogit(-2*x)
+data <- data.frame(x,y)
+ggplot(data, aes(x,y)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
+```
+
+##### 2. Earnings predict graduation
+You are interested in how well the combined earnings of the parents in a child’s family predicts high school graduation. You are told that the probability a child graduates from high school is 27% for children whose parents earn no income and is 88% for children whose parents earn $60,000. Determine the logistic regression model that is consistent with this information. (For simplicity you may want to assume that income is measured in units of $10,000).
+
+$P(gr=1|inc=0) = 0.27$  
+$P(gr=0|inc=60k) = 0.88$  
+
+$P(gr=1|inc) = logit^{-1}(\beta_0 + \beta_1*INC)$  
+
+$logit^{-1}(\beta_0) = 0.27$   &rarr; $\beta_0= logit(0.27)$  
+
+$logit^{-1}(logit(0.27) + \beta_1*6) = 0.88$  
+&rarr; $\beta_1 = (logit(0.88)-logit(0.27))/6$
+ 
+&rarr;  $P(gr=1|inc) = logit^{-1}(-0.995 + 0.498*income)$
+
+
+```{r}
+x <- runif(10000, 0, 15)
+y <- invlogit(-0.995 + 0.498*x)
+data <- data.frame(x,y)
+ggplot(data, aes(x,y)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  xlab('earning in 10k')
+```
+
+##### 3. Midterm scores
+In a class of 50 students, a logistic regression is performed of course grade (pass or fail) on midterm exam score (continuous values with mean 60 and standard deviation 15). The fitted model is P(pass) = logit−1(−24 + 0.4x).  
+
+###### (a) Graph the fitted model. Also on this graph put a scatterplot of hypothetical data consistent with the information given.  
+
+```{r}
+midterm <- rnorm(50, 60, 15)
+fitted <- invlogit(-24+0.4*midterm)
+df_mt <- data.frame(midterm, fitted)
+df_mt$y <- df_mt$fitted 
+df_mt[df_mt$fitted>0.5,'y'] <- 1
+df_mt[df_mt$fitted<=0.5,'y'] <- 0
+ggplot(data=data.frame(x=c(0,100)), aes(x=x)) +
+  stat_function(fun=function(x) invlogit(-24 + 0.4*x), color='blue') +
+  geom_point(data=df_mt, aes(x=midterm, y=y), alpha=0.7)
+```
+
+###### (b) Suppose the midterm scores were transformed to have a mean of 0 and standard deviation of 1. What would be the equation of the logistic regression using these transformed scores as a predictor?  
+
+$P(pass) = logit−1(−24 + 0.4x)$  
+&rarr; $P(pass) = logit−1(0 + 0.4*15)$ &rarr; $P(pass) = logit−1(6x)$
+
+
+###### c) Create a new predictor that is pure noise and implement it in the model. How much does the model change?  
+The deviance should decrease by ~1.
+
+
+
+##### 4. Rodents (building a logistic regression model) 
+The folder rodents contains data on rodents in a sample of New York City apartments.  
+
+```{r}
+rd <- read.table('http://www.stat.columbia.edu/~gelman/arm/examples/rodents/rodents.dat')
+head(rd)
+```
+
+###### (a) Build a logistic regression model to predict the presence of rodents (the variable rodent2 in the dataset) given indicators for the ethnic groups (race). Combine categories as appropriate. Discuss the estimated coefficients in the model.  
+###### (b) Add to your model some other potentially relevant predictors describing the apartment, building, and community district. Build your model using the general principles explained in Section 4.6. Discuss the coefficients for the ethnicity indicators in your model. 
 
 ## References
 
