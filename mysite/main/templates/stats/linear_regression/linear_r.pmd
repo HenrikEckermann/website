@@ -140,7 +140,7 @@ An observation that is unconditionally unusual in either its Y or X value is cal
 The standard deviation of the errors of our estimations (RSE) is slightly higher than the standard deviation of the distribution of our residuals $\sigma$ because our model is only an estimation of the true regression line. When we predict values, then the deviation from the true line should lie roughly 68% within $|\sigma|$. 
 
 #### 9. Linear transformations
-Linear tranformations do not affect the fit or the predictions in linear regression (though they can do so in  multilevel models). But they can improve interpretability of the model. E.g. it can make sense to change income by dividing it by 10.000 or age by dividing it by 10. Standardizing  the variable allows interpreting the intercept as the mean outcome when all predictors are at their mean. @Gelman2007 advices to divide by 2SD under certain circumstances because then the coefficients can better be compared with those for binary inputs. Centering the variable makes the interpretation easier when we include interactions in our model: Each main effect corresponds to the difference in the outcome when the other inputs are at their average. In a model with one continuous predictor, standardizing both outcome and the predictor makes the slope the correlation between the two variables. Generally with two continuous predictors $b= r*\fract{\sigma_y}{\sigma_x}$. In consequence, when the slope is > 1, then this means that the variance of y is greater than the variance of x.
+Linear tranformations do not affect the fit or the predictions in linear regression (though they can do so in  multilevel models). But they can improve interpretability of the model. E.g. it can make sense to change income by dividing it by 10.000 or age by dividing it by 10. Standardizing  the variable allows interpreting the intercept as the mean outcome when all predictors are at their mean. @Gelman2007 advices to divide by 2SD under certain circumstances because then the coefficients can better be compared with those for binary inputs. Centering the variable makes the interpretation easier when we include interactions in our model: Each main effect corresponds to the difference in the outcome when the other inputs are at their average. In a model with one continuous predictor, standardizing both outcome and the predictor makes the slope the correlation between the two variables. Generally with two continuous predictors $b= r*\frac{\sigma_y}{\sigma_x}$. In consequence, when the slope is > 1, then this means that the variance of y is greater than the variance of x.
 
 
 #### 10. Other Transformations 
@@ -293,3 +293,102 @@ pred_l = pd.melt(bdf[['sresid', 'female', 'blkandwhite','tenured', 'nonenglish']
 ```
 
 Looks like the model overestimates the courseevaluation for lecturers that are in the lowest range of beauty but for the rest it looks fine here. Other than that we see that we have only a few data points for nonenglish lecturers and one skin color, I find nothing special.
+
+
+
+
+Let us look at another exersize:
+#### 3. Pyth exercise
+
+> The folder pyth contains outcome y and inputs x1, x2 for 40 data points, with a further 20 points with the inputs but no observed outcome. Save the file to your working directory and read it into R using the read.table() function.  
+
+```{python}
+#import data
+pyth = pd.read_csv('http://www.stat.columbia.edu/~gelman/arm/examples/pyth/exercise2.1.dat', delimiter=' ')
+pyth.describe()
+```
+
+> a) Use R to fit a linear regression model predicting y from x1,x2, using the first 40 data points in the file. Summarize the inferences and check the fit of your model.  
+
+```{python}
+pmod = sm.formula.ols('y ~ x1 + x2', data = pyth.iloc[0:40,:]).fit()
+pmod.summary()
+```
+
+According to the analysis, 97.2% variance is explained by the model, which is awesome for what I have seen so far...The model is:  
+
+$$\hat{y} = 0.515x_1 + 0.807x_2$$
+
+
+> b) Display the estimated model graphically. 
+
+```{python}
+pyth_l = pd.melt(pyth.iloc[0:40,:], id_vars = 'y')
+
+pyth_l.head()
+
+(ggplot(pyth_l, aes(x='value', y='y'))
++ geom_point()
++ geom_smooth(method='lm', color='red')
++ facet_wrap('~variable', scales='free'))
+
+```
+ 
+> c) Make a residual plot for this model. Do the assumptions appear to be met?  
+
+```{python}
+pyth['sresid'] = pmod.resid/pmod.resid.std()
+pyth['fitted'] = pmod.fittedvalues
+(ggplot(pyth.iloc[0:40,:], aes(x='fitted', y='sresid'))
++ geom_point()
++ geom_smooth(se=False, color='red'))
+```
+The residual plot indicates heteroscedasticity and at least one outlier. I want to look more into this by checking outliers and influence:
+
+```{python}
+from statsmodels.stats.outliers_influence import OLSInfluence
+#Append dataframe with stand-resid, stud-resid etc.
+infl = OLSInfluence(pmod).summary_frame()
+pyth['index'] = pyth.index
+pyth = pyth.join(infl[['cooks_d', 'hat_diag', 'standard_resid']])
+outlier = pyth.loc[(pyth.standard_resid >= 2.5) | (pyth.standard_resid <= -2.5)]
+infl = pyth.loc[pyth.cooks_d>0.8,:]
+#Create Influence plot
+(ggplot(pyth, aes(x = 'hat_diag', y = 'standard_resid'))
+ + geom_point(alpha = 0.3)
+ + geom_point(infl, aes(x = 'hat_diag', y = 'standard_resid'), color = 'red')
+ + geom_vline(xintercept=2.5*pyth.hat_diag.mean(), linetype='dashed', alpha=0.4)
+ + geom_hline(yintercept=3, alpha=0.4, linetype='dashed')
+ + geom_text(outlier, aes(label = 'index'), nudge_x = 0.005)
+ + labs(x='Leverage', y='Standardized Residuals'))
+
+
+(ggplot(pyth, aes(x='x1', y='x2'))
++ geom_point()
++ geom_point(outlier,aes(x='x1', y='x2'), color='red'))
+```
+
+We see that the value at index 7 is an outlier with high influece. It is very high at x1 and very low at x2. 
+
+> d) Make predictions for the remaining 20 data points in the file. How confident do you feel about these predictions?  
+
+```{python}
+#make predictions
+ppred = pmod.predict(pyth.iloc[40:,:])
+#descriptive for the complete obersations and model fit
+pyth.iloc[0:40,:].describe()
+#descriptives of the preds
+pyth.iloc[40:,:].describe()
+2*pmod.resid.std()
+```
+
+The true values should be estimated with an accuracy of +/- 1.753 in 95% of the predictions. Given a mean of 13.6 and a SD of 5.3, this seems like an accurate estimate. However, given the violation of homoscedasticity, I feel not very confident about these predictions.  
+
+
+> After doing this exercise, take a look at Gelman and Nolan (2002, section 9.4) to see where these data came from
+
+Interestingly, the data are generated with $y^2 = x_1^2 + x_2^2$ but are still fitted well by the linear regression model. For more exercises and/or explanation, I can totally recommend the book of @Gelman2007!
+
+
+
+## References

@@ -1,5 +1,20 @@
+---
+title: 'Linear Regression in Python'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/BibTex/statistic.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+## [Back](http://henrikeckermann.pythonanywhere.com/)
+
 ## Introduction
-Linear regression is a method that provides the average outcome value, given a single or several predictors. We will see throughout this article what exactly that means. I read some introductory books or articles about linear regression analysis before I wrote this up. I want to note that this is not a complete article. Instead I made some notes of the points that were either most important or new for me when reading the book chapter about linear regression of @Gelman2007. The focus lies on the application and interpretation of multiple linear regression. To also practice fitting a linear models in Python, I will present the example @Gelman2007 uses and solve 1 or 2 exercises out of the book in the end. So let's start by remembering the basic model of linear regression:
+Linear regression is a method that provides the average outcome value, given a single or several predictors. We will see throughout this article what exactly that means. I want to note that this is not a complete introductory article. Instead I made some notes of the points that were either most important or new for me when I read the book chapter about linear regression of the book of @Gelman2007. The focus lies on the application and interpretation of multiple linear regression analysis and the practice of  fitting a linear models in Python, I will present an example that @Gelman2007 show in their book and solve a few exercises in the end. Not all question can be answered but I might edit this article over time. So let's start by remembering the basic model of linear regression:
 
 $$\hat{y} = \beta_0 + \beta_1X_1 + \epsilon$$  
 where $\epsilon$ are independent and ~$N(0,\sigma^2)$  
@@ -49,7 +64,7 @@ Method:                 Least Squares   F-statistic:
 25.69
 Date:                Sun, 31 Dec 2017   Prob (F-statistic):
 5.96e-07
-Time:                        13:33:33   Log-Likelihood:
+Time:                        19:45:06   Log-Likelihood:
 -1911.8
 No. Observations:                 434   AIC:
 3828.
@@ -98,9 +113,7 @@ df.loc[df.mom_hs==1,'kid_score'].mean()
  + geom_abline(intercept=77.5, slope=11.8, color='red'))
 ```
 
-```
-<ggplot: (-9223372036573496874)>
-```
+
 
 ![](figures/linear_r_figure2_1.png)\
 
@@ -120,9 +133,7 @@ kid_cont.summary()
  + geom_smooth(method='lm', color='red'))
 ```
 
-```
-<ggplot: (284839786)>
-```
+
 
 ![](figures/linear_r_figure3_1.png)\
 
@@ -142,9 +153,7 @@ kid_mix.summary()
 + geom_abline(intercept= 31.68, slope=0.56, color='red', size=1))
 ```
 
-```
-<ggplot: (-9223372036569568007)>
-```
+
 
 ![](figures/linear_r_figure4_1.png)\
 
@@ -170,9 +179,7 @@ kid_int.summary()
  + scale_color_manual(['red','blue']))
 ```
 
-```
-<ggplot: (284863496)>
-```
+
 
 ![](figures/linear_r_figure5_1.png)\
 
@@ -245,7 +252,7 @@ An observation that is unconditionally unusual in either its Y or X value is cal
 The standard deviation of the errors of our estimations (RSE) is slightly higher than the standard deviation of the distribution of our residuals $\sigma$ because our model is only an estimation of the true regression line. When we predict values, then the deviation from the true line should lie roughly 68% within $|\sigma|$. 
 
 #### 9. Linear transformations
-Linear tranformations do not affect the fit or the predictions in linear regression (though they can do so in  multilevel models). But they can improve interpretability of the model. E.g. it can make sense to change income by dividing it by 10.000 or age by dividing it by 10. Standardizing  the variable allows interpreting the intercept as the mean outcome when all predictors are at their mean. @Gelman2007 advices to divide by 2SD under certain circumstances because then the coefficients can better be compared with those for binary inputs. Centering the variable makes the interpretation easier when we include interactions in our model: Each main effect corresponds to the difference in the outcome when the other inputs are at their average. In a model with one continuous predictor, standardizing both outcome and the predictor makes the slope the correlation between the two variables. Generally with two continuous predictors $b= r*\fract{\sigma_y}{\sigma_x}$. In consequence, when the slope is > 1, then this means that the variance of y is greater than the variance of x.
+Linear tranformations do not affect the fit or the predictions in linear regression (though they can do so in  multilevel models). But they can improve interpretability of the model. E.g. it can make sense to change income by dividing it by 10.000 or age by dividing it by 10. Standardizing  the variable allows interpreting the intercept as the mean outcome when all predictors are at their mean. @Gelman2007 advices to divide by 2SD under certain circumstances because then the coefficients can better be compared with those for binary inputs. Centering the variable makes the interpretation easier when we include interactions in our model: Each main effect corresponds to the difference in the outcome when the other inputs are at their average. In a model with one continuous predictor, standardizing both outcome and the predictor makes the slope the correlation between the two variables. Generally with two continuous predictors $b= r*\frac{\sigma_y}{\sigma_x}$. In consequence, when the slope is > 1, then this means that the variance of y is greater than the variance of x.
 
 
 #### 10. Other Transformations 
@@ -269,12 +276,10 @@ What I like so much about the book is that it gives practical guidelinces and th
 
 
 ```python
-#I run simluate this 10000x right away
+#I simluate this 1000x right away
 pvalues = []
 for i in range(1000):
-  d = {}
-  d['x'] = np.random.normal(0,1, 1000)
-  d['y'] = np.random.normal(0,1,1000)
+  d = {'x': np.random.normal(0,1, 1000), 'y': np.random.normal(0,1, 1000)}
   data = pd.DataFrame(d)
   lin_reg = sm.formula.ols('y ~ x', data=data).fit()
   pvalues.append(lin_reg.pvalues[1])
@@ -283,7 +288,7 @@ for i in range(1000):
 ```
 
 ```
-0.042999999999999997
+0.052999999999999999
 ```
 
 
@@ -296,7 +301,7 @@ for i in range(1000):
 
 > b) Fit some other models, including beauty and also other input variables. Consider at least one model with interactions. For each model, state what the predictors are, and what the inputs are (see Section 2.1), and explain the meaning of each of its coefficients.
 
-> c) Fit regression models predicting evaluations given many of the inputs in the dataset. Consider interac- tions, combinations of predictors, and transformations, as appropriate. Consider several models, discuss in detail the final model that you choose, and also explain why you chose it rather than the others you had considered.
+> c) Fit regression models predicting evaluations given many of the inputs in the dataset. Consider interactions, combinations of predictors, and transformations, as appropriate. Consider several models, discuss in detail the final model that you choose, and also explain why you chose it rather than the others you had considered.
 
 NOTE: Unfortunately, I do not know the meaning of many variables in the dataset. For the purpose of exercising, I think it is fine if I pick the ones where I know what was measured. I restrict my analysis to the following variables:
 
@@ -311,11 +316,6 @@ NOTE: Unfortunately, I do not know the meaning of many variables in the dataset.
 
 
 ```python
-#import modules
-from plotnine import *
-import numpy as np
-import pandas as pd 
-import statsmodels.api as sm
 #import data
 bdf = pd.read_csv('http://www.stat.columbia.edu/~gelman/arm/examples/beauty/ProfEvaltnsBeautyPublic.csv')
 #rename btystdave to beauty for convenience
@@ -349,14 +349,12 @@ intervals are not yet implementedfor lowess smoothings.
   warnings.warn("Confidence intervals are not yet implemented"
 ```
 
-```
-<ggplot: (-9223372036569250055)>
-```
+
 
 ![](figures/linear_r_figure8_1.png)\
 
 
-The plots show that males have higher mean sores than females and nonenglish speaking lecturers have lower mean scores. There is also a difference between black and white in the mean score. Beauty is positively associated with evaluation. I fitted some models with single predictors to get a feeling for the individual predictors but you will see only a model with all predictors but age. I removed age because it was not significant and the plot does not suggest any pattern (maybe a main effect for the oldest age group)
+The plots show that males have higher mean sores than females and nonenglish speaking lecturers have lower mean scores. There is also a difference between black and white skin color in the mean score. Beauty is positively associated with evaluation. I fitted some models with single predictors to get a feeling for the individual predictors but you will see only a model with all predictors but age. I removed age because it was not significant and the plot does not suggest any pattern (maybe a main effect for the oldest age group if you would split age into several groups)
 
 
 ```python
@@ -384,7 +382,7 @@ Method:                 Least Squares   F-statistic:
 12.90
 Date:                Sun, 31 Dec 2017   Prob (F-statistic):
 9.43e-12
-Time:                        13:33:43   Log-Likelihood:
+Time:                        19:45:15   Log-Likelihood:
 -353.18
 No. Observations:                 463   AIC:
 718.4
@@ -427,9 +425,11 @@ correctly specified.
 
 
 
-In the last model with the standardized input, the intercept of 4.15 reflects the mean score of courseevaluation for males, english speaking, non-tenured with the mean score of beauty. We can see that non-english speaking lecturers are 0.4 worse when beauty is at average and the other predictors are held constant. I will plot residuals vs. fitted values after I included interactions.
+The last model is:
 
+$courseeval = 4.15 - 0.25female -0.4non_e +0.27blkw -0.12ten + 0.26zzbeauty$  
 
+The intercept of 4.15 reflects the mean score of courseevaluation for males, english speaking, non-tenured with the mean score of beauty. We can see that non-english speaking lecturers are 0.4 worse when beauty is at average and the other predictors are held constant. Let's include an interaction and also check some assumptions:  
 
 
 
@@ -453,7 +453,7 @@ Method:                 Least Squares   F-statistic:
 11.40
 Date:                Sun, 31 Dec 2017   Prob (F-statistic):
 6.90e-12
-Time:                        13:33:43   Log-Likelihood:
+Time:                        19:45:15   Log-Likelihood:
 -351.40
 No. Observations:                 463   AIC:
 716.8
@@ -498,10 +498,10 @@ correctly specified.
 
 
 
-This yields: $eval = 4.14 - 0.25female -0.40non_e + 0.28blkw - 0.11tenu + 0.16beauty - 0.12beauty:female$   
+This yields: $eval = 4.14 - 0.25female -0.40non_e + 0.28blkw - 0.11tenu + 0.16cbeauty - 0.12cbeauty*female$   
 
 
-The intercept reflects evaluation at mean beauty and all binaries at zero. Females with average beauty are evaluated 0.24 lower than males when all other binaries are at zero. Non English speaking teachers with average beauty are evaluated 0.4 lower, again when all other binaries == 0. Interestingly, the interaction term reveals that the association between beauty and evaluation is stronger for males. Let us plot this:
+The intercept reflects evaluation at mean beauty and all binaries at zero. Females with average beauty are evaluated 0.24 lower than males with average beauty when all other binaries are constant. Non English speaking teachers with average beauty are evaluated 0.4 lower when all other binaries are kept constant. Interestingly, the interaction term reveals that the association between beauty and evaluation is stronger for males. Let us plot this:
 
 
 ```python
@@ -530,12 +530,221 @@ intervals are not yet implementedfor lowess smoothings.
   warnings.warn("Confidence intervals are not yet implemented"
 ```
 
-```
-<ggplot: (-9223372029314371240)>
-```
+
 
 ![](figures/linear_r_figure11_1.png)\
 
 
+It seems that the variance of the residuals is greater in the midrange of the data compared to the beginning and the end. However, there are also only a few data points at the extremes.  
 
 
+```python
+pred_l = pd.melt(bdf[['sresid', 'female', 'blkandwhite','tenured', 'nonenglish']], id_vars='sresid')
+
+#resid vs beauty
+(ggplot(bdf, aes(x='c_beauty', y= 'sresid'))
++ geom_jitter(alpha=0.3)
++ geom_smooth(color='red'))
+
+#jittered residuals for each binary predictor 
+(ggplot(pred_l, aes(x='value', y= 'sresid'))
++ geom_jitter(alpha=0.3)
++ stat_summary(fun_data = 'mean_sdl', fun_args = {'mult':1}, geom = 'errorbar', color = 'red')
++ facet_wrap('~variable'))
+```
+
+
+
+
+![](figures/linear_r_figure12_1.png)\
+
+
+Looks like the model overestimates the courseevaluation for lecturers that are in the lowest range of beauty but for the rest it looks fine here. Other than that we see that we have only a few data points for nonenglish lecturers and one skin color, I find nothing special.
+
+
+
+
+Let us look at another exersize:
+#### 3. Pyth exercise
+
+> The folder pyth contains outcome y and inputs x1, x2 for 40 data points, with a further 20 points with the inputs but no observed outcome. Save the file to your working directory and read it into R using the read.table() function.  
+
+
+```python
+#import data
+pyth = pd.read_csv('http://www.stat.columbia.edu/~gelman/arm/examples/pyth/exercise2.1.dat', delimiter=' ')
+pyth.describe()
+```
+
+```
+               y         x1         x2
+count  40.000000  60.000000  60.000000
+mean   13.590250   5.323500  10.994167
+std     5.279126   3.188782   5.904045
+min     3.290000   0.190000   0.350000
+25%     9.325000   2.527500   5.760000
+50%    15.590000   5.525000  12.685000
+75%    18.002500   8.292500  15.745000
+max    21.630000   9.990000  19.680000
+```
+
+
+
+> a) Use R to fit a linear regression model predicting y from x1,x2, using the first 40 data points in the file. Summarize the inferences and check the fit of your model.  
+
+
+```python
+pmod = sm.formula.ols('y ~ x1 + x2', data = pyth.iloc[0:40,:]).fit()
+pmod.summary()
+```
+
+```
+<class 'statsmodels.iolib.summary.Summary'>
+"""
+                            OLS Regression Results
+==============================================================================
+Dep. Variable:                      y   R-squared:
+0.972
+Model:                            OLS   Adj. R-squared:
+0.971
+Method:                 Least Squares   F-statistic:
+652.4
+Date:                Sun, 31 Dec 2017   Prob (F-statistic):
+1.41e-29
+Time:                        19:45:19   Log-Likelihood:
+-50.985
+No. Observations:                  40   AIC:
+108.0
+Df Residuals:                      37   BIC:
+113.0
+Df Model:                           2
+Covariance Type:            nonrobust
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025
+0.975]
+------------------------------------------------------------------------------
+Intercept      1.3151      0.388      3.392      0.002       0.530
+2.101
+x1             0.5148      0.046     11.216      0.000       0.422
+0.608
+x2             0.8069      0.024     33.148      0.000       0.758
+0.856
+==============================================================================
+Omnibus:                       14.478   Durbin-Watson:
+2.509
+Prob(Omnibus):                  0.001   Jarque-Bera (JB):
+15.393
+Skew:                           1.341   Prob(JB):
+0.000454
+Kurtosis:                       4.428   Cond. No.
+38.7
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is
+correctly specified.
+"""
+```
+
+
+
+According to the analysis, 97.2% variance is explained by the model, which is awesome for what I have seen so far...The model is:  
+
+$$\hat{y} = 0.515x_1 + 0.807x_2$$
+
+
+> b) Display the estimated model graphically. 
+
+
+```python
+pyth_l = pd.melt(pyth.iloc[0:40,:], id_vars = 'y')
+
+pyth_l.head()
+
+(ggplot(pyth_l, aes(x='value', y='y'))
++ geom_point()
++ geom_smooth(method='lm', color='red')
++ facet_wrap('~variable', scales='free'))
+```
+
+
+
+![](figures/linear_r_figure15_1.png)\
+
+ 
+> c) Make a residual plot for this model. Do the assumptions appear to be met?  
+
+
+```python
+pyth['sresid'] = pmod.resid/pmod.resid.std()
+pyth['fitted'] = pmod.fittedvalues
+(ggplot(pyth.iloc[0:40,:], aes(x='fitted', y='sresid'))
++ geom_point()
++ geom_smooth(se=False, color='red'))
+```
+
+
+
+![](figures/linear_r_figure16_1.png)\
+
+The residual plot indicates heteroscedasticity and at least one outlier. I want to look more into this by checking outliers and influence:
+
+
+```python
+from statsmodels.stats.outliers_influence import OLSInfluence
+#Append dataframe with stand-resid, stud-resid etc.
+infl = OLSInfluence(pmod).summary_frame()
+pyth['index'] = pyth.index
+pyth = pyth.join(infl[['cooks_d', 'hat_diag', 'standard_resid']])
+outlier = pyth.loc[(pyth.standard_resid >= 2.5) | (pyth.standard_resid <= -2.5)]
+infl = pyth.loc[pyth.cooks_d>0.8,:]
+#Create Influence plot
+(ggplot(pyth, aes(x = 'hat_diag', y = 'standard_resid'))
+ + geom_point(alpha = 0.3)
+ + geom_point(infl, aes(x = 'hat_diag', y = 'standard_resid'), color = 'red')
+ + geom_vline(xintercept=2.5*pyth.hat_diag.mean(), linetype='dashed', alpha=0.4)
+ + geom_hline(yintercept=3, alpha=0.4, linetype='dashed')
+ + geom_text(outlier, aes(label = 'index'), nudge_x = 0.005)
+ + labs(x='Leverage', y='Standardized Residuals'))
+
+
+(ggplot(pyth, aes(x='x1', y='x2'))
++ geom_point()
++ geom_point(outlier,aes(x='x1', y='x2'), color='red'))
+```
+
+
+![](figures/linear_r_figure17_1.png)\
+
+
+We see that the value at index 7 is an outlier with high influece. It is very high at x1 and very low at x2. 
+
+> d) Make predictions for the remaining 20 data points in the file. How confident do you feel about these predictions?  
+
+
+```python
+#make predictions
+ppred = pmod.predict(pyth.iloc[40:,:])
+#descriptive for the complete obersations and model fit
+pyth.iloc[0:40,:].describe()
+#descriptives of the preds
+pyth.iloc[40:,:].describe()
+2*pmod.resid.std()
+```
+
+```
+1.7533035640406547
+```
+
+
+
+The true values should be estimated with an accuracy of +/- 1.753 in 95% of the predictions. Given a mean of 13.6 and a SD of 5.3, this seems like an accurate estimate. However, given the violation of homoscedasticity, I feel not very confident about these predictions.  
+
+
+> After doing this exercise, take a look at Gelman and Nolan (2002, section 9.4) to see where these data came from
+
+Interestingly, the data are generated with $y^2 = x_1^2 + x_2^2$ but are still fitted well by the linear regression model. For more exercises and/or explanation, I can totally recommend the book of @Gelman2007!
+
+
+
+## References
