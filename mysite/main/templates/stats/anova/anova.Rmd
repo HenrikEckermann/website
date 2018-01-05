@@ -8,7 +8,7 @@ csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa
 library(papaja)
 ```
 
-
+#
 ## Introduction
 In ANOVA, the goal is to compare means of an outcome variable between groups when we have more than 2 groups. We do not test between which groups the differences are but rather if there is a difference at all. We could test which group means differ by using posthoc tests when using the frequentist approach (more on that later). This article assumes that you have background knowledge in linear models, especially fitting linear regression models in R. ANOVA and also ANCOVA can be described as special cases of a linear regression model, where e.g. a one way ANOVA is simply a linear regression with a categorical predictor. I want to acknowledge the authors of @Korner-Nievergelt2015 because for this article I use in part their code examples, especially when it comes to the simulation of data and the intro to the Bayesian framework when it comes to ANOVA. I will also rely on principles that have been formulated by @Gelman2007.
 
