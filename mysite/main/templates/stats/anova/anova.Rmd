@@ -1,0 +1,248 @@
+---
+title: 'AN(C)OVA in R'
+bibliography: /Users/henrikeckermann/Documents/workspace/website/mysite/main/stats/statistic.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+```{r echo=FALSE}
+library(papaja)
+```
+
+
+## Introduction
+In ANOVA, the goal is to compare means of an outcome variable between groups when we have more than 2 groups. We do not test between which groups the differences are but rather if there is a difference at all. We could test which group means differ by using posthoc tests when using the frequentist approach (more on that later). This article assumes that you have background knowledge in linear models, especially fitting linear regression models in R. ANOVA and also ANCOVA can be described as special cases of a linear regression model, where e.g. a one way ANOVA is simply a linear regression with a categorical predictor. I want to acknowledge the authors of @Korner-Nievergelt2015 because for this article I use in part their code examples, especially when it comes to the simulation of data and the intro to the Bayesian framework when it comes to ANOVA. I will also rely on principles that have been formulated by @Gelman2007.
+
+## Behind the scenes
+To explain the procedure, I will compare it with what we are used to when fitting a linear regression model: In linear regression, we compare whether the linear model that we use to create the regression line, fits the data better than the baseline model (mean). The fit is reflected by the variance around the mean and the regression line, respectively. 
+
+#### SST, SSW and SSB
+The variance of the data around our basic model (mean) is called the _total sum of squares_ and is defined as:  
+
+$$SST = \sum_{i=1}^n (y_i-\bar{y})^2$$
+
+The variance of the data around the 'better' model or stated differently: The variance that the better model still cannot explain, is the _residual sum of squares_ and is defined as:
+
+$$RSS = \sum_{i=1}^n (y_i - \hat{y}_i)^2$$ 
+
+In the context of ANOVA, this is often referred to as _sum of squares within_ (SSW). As in ANOVA the model is the corresponding group mean, we can write more specifically:  
+
+$$SSW=\sum{i=1}^n(y_i-\bar{y}_{gi})^2$$
+
+If we subtract RSS from SST, we end up with the _model sum of squares_. In the context of ANOVA, the term is called _sum of squares between_ (SSB):
+
+$$SSB=\sum_{i=1}^n(\bar{y_{gi}}-\bar{y})^2$$
+
+SSM/SSB reflect the part of the SST that the 'better' model can explain, whereas RSS/SSW reflect the part of the SST that the 'better' model still cannot explain. In summary: SSB+SSW=SST.
+
+
+#### Frequentist approach
+Our null hypothesis is that $\theta_1 = \theta_2 = \theta_3$. If this hypothesis is true, we expect that the variance between the groups equals the variance within the groups. We calculate the mean sum of squares (MSB and MSW) by dividing SSB and SSW by their corresponding degrees of freedom, which are $df_{SSB}=k-1$ and $df_{SSW} = N-k$. Then we can calculate the F-statistic:  
+
+$$F=\frac{MSB}{MSW}$$
+
+Depending of the degrees of freedom ($df_{SSB}$ and $df_{SSW}$), we can check the distribution of the F-value under $H_0$ to check for the probability that we get the F-value we have or a more extreme one. At the cutoff of 0.05, we would decide that there is a least one mean that is different from the other means.
+
+
+## One-Way ANOVA in R
+If we fit a linear model, R automatically picks $\beta_0$ as the reference group. Thus, the intercept reflects the group mean of the first group. If we have three groups, then $\beta_1$ reflects the difference in means between the first and the second group and $\beta_2$ relfects the difference in means between the first and the third group. I will simulate data (3 groups with different means) and then illustrate this using lm in R:  
+
+```{r}
+#import libraries needed
+library(arm)
+library(ggplot2)
+library(reshape2)
+library(plyr)
+#simulate data 
+b0 <- 12 #true mean group 1
+b1 <- 0.75 #difference in true means between group 2 to group 1
+b2 <- -0.75 #difference in true means between group 1 and group 3
+sigma <- 2 #residual SD (=within group SD)
+n <- 90
+group <- factor(rep(c(1, 2, 3), each=30))
+#simulate the y variable
+simresid <- rnorm(n, mean=0, sd=sigma)
+y <- b0 + as.numeric(group=='2') *b1 + as.numeric(group=='3')*b2 + simresid
+df <- data.frame(group, y)
+#The means of the fake data
+ddply(df, .(group), summarize, mean = mean(y))
+#fit linear model
+mod <- lm('y~group', df)
+coefs <- coef(mod)
+summary(mod)
+#see how aov yields the same F-test for one-way A
+aovmod <- aov(y~group, df)
+summary(aovmod)
+```
+As we can see, the coefficients of our model reflect the group means as described above: $\hat{y} =$ `r coefs[1]` + `r coefs[2]`$group_2$ - `r coefs[2]`$group_3$. In the summary of our model we also find the significant F-statistic. Now we could do post hoc tests to check which groups differ (see e.g. Bonferroni or Tukey). These tests are used because if one conducts e.g. multiple t-tests, there is a 5% chance to falsely get a significant result for each test just by chance. I will not cover post hoc test at this point but will mention an advice about it that was cited in @Korner-Nievergelt2015 later.
+
+
+#### A Bayesian way
+Using the Bayesian framework we could ask in how far the data support the hypothesis that the mean of group 2 or group 3 is greater than mean of group 1. We could simulate the posterior distribution of the parameters and their differences. Then we could calculate the 95% credible intervals (CrI) to give an estimate. Here is how such a simulation could look like using the _arm_ package. I used different parameters for the fake data simulation to get a feeling for these tools:
+
+```{r}
+bsim <- sim(mod, n.sim=1000)
+m.g1 <- coef(bsim)[,1]
+m.g2 <- coef(bsim)[,1] + coef(bsim)[,2]
+m.g3 <- coef(bsim)[,1]+ coef(bsim)[,3]
+df <- data.frame(m.g1,m.g2,m.g3)
+dfl <- melt(df)
+head(df)
+#Posterior distribution of group means
+qplot(value, data=dfl, alpha = 0.5, geom='density', fill=variable)
+#difference between group 2 and 1
+d.g1.2 <- df$m.g1-df$m.g2
+mean(d.g1.2)
+quantile(d.g1.2, prob=c(0.025,0.975))
+#difference between group 3 and 1
+d.g1.3 <- df$m.g1-df$m.g3
+mean(d.g1.3)
+quantile(d.g1.3, prob=c(0.025,0.975))
+#how strongly do the data support that means group 2 > group 1?
+mean(m.g3>m.g1)
+```
+
+I advice you to also play with the means in the data simulation a little. In the current setting, g2 is larger than g1 in `r mean(m.g2>m.g1)*100`% of all simulated cases whereas g3 is larger than g1 in `r mean(m.g3>m.g1)*100`% of the cases.  
+
+
+## Two-Way ANOVA
+For this part I use the dataset out of the book [@Korner-Nievergelt2015]. Let us have a look at the columns. It is self-explanatory:
+
+```{r}
+library(blmeco)
+data(periparusater)
+df <- periparusater
+summary(df)
+head(df)
+```
+
+We will compare the wing length of _Periparus ater_ between the two age groups (juvenile vs adult) and the two sexes:  
+
+```{r}
+#change names for convenience
+levels(df$age) = c('juv', 'adu')
+levels(df$sex) = c('male', 'female')
+#fit model
+pmod <- lm('wing ~ sex + age', df)
+#plot means and individuals data points
+ggplot(df, aes(x=sex,y=wing)) +
+  geom_jitter(width=0.05) +
+  stat_summary(fun.y = mean, geom = 'point', color = 'red') +
+  stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = 0.2, col='red') +
+  facet_grid(.~age)
+summary(pmod)
+```
+
+We have the following model:  
+
+$$wing = 63.84 - 3.34female + 0.88adu$$
+
+This model would translate to: The mean wing length of male juvenile birds is 63.84 and female wings are 3.35 shorter given that they belong to the same agegroup. Adult wing length is 0.88 longer than juvenile length, given that we compare birds from the same sex. However, as we already could see in the plot, the difference between juvenile and adult is different depending on sex. Let us see what happens if we include the interaction $sex \times age$:
+
+```{r}
+pmod2 <- lm('wing ~ sex * age', df)
+summary(pmod2)
+amod <- aov(wing ~ sex * age, df)
+summary(amod)
+```
+
+```{r echo=FALSE}
+aovprint <- apa_print.aov(amod)
+```
+
+$$wing=63.5 -2.67female + 1.33adu -1.04fem \times adu$$
+
+This means: In our data, the mean wing length of male, juvenile birds is 63.5. Male adults have 1.33 longer wings than that. Female, juvenile birds have 2.67 shorter wing length compared to juvenile males and female adult birds have 0.29 shorter wing length than juvenile male birds. As you can see, for the two-way Anova, I used the function _aov_, which conducts sequential F-test. This type of testing delivers the following output:
+
+`r aovprint$table`
+
+ First the function _aov_ tests whether _sex_ explains a significant amount of variance over the baseline model. Then it checks whether _age_ explains significant amount of variance when added to the model where _sex_ is already implemented and so forth... Another method would be marginal F-tests, which tests whether any of the variables explains a significant amount of variance when all other variables are already in the model. It is important to know that the order in which we enter the variables in the function determines in which order the sequential analysis works. In case, the F-test yields a significant result, post hoc test could be conducted to further analyze which group means differ. 
+ In the Bayesian framework we have a 5% chance that the true value lies outside the credible interval (CrI) every time we calculate it, so there is also a similar problem. Personally, I will stick with the following advice given by @Gelman2007: 
+
+ > - Formulate scientific hypotheses prior to data collection and stick to these during data analyses
+ - Use, whenever possible hierarchical models (mixed models)
+ - Accept that the true parameter value is outside the 95% CrI in 5% of the cases
+ - Be honest - that is, describe the search effort that has been spent to find significant results, and also publish the nonsignificant results
+
+
+## ANCOVA 
+ANCOVA tries to answer questions like: 'Are there differences between means of the groups after adjusting for a covariate?'. @Field2012 explains that the covariate is a continuous variable that is thought to reduce the RSS of the model, thereby increasing the power of the F-test. However, we also have one df less for each covariate that we include in the model. Therefore, including covariates in the model always comes at a trade-off. @Tabachnick2007 notes that the interpretation of _adjusted mean_ is misleading because it may not correspond to any real life situation: Adjusted means would mean that all subjects had the same score on the covariate. That is not realistic, especially in non-experimental settings. So they conclude:  
+> At best, the nonexperimental use of ANCOVA allows you to look at IV-DV relationships adjusted for the effects of CVs.
+
+@Korner-Nievergelt2015 give an example where the (log) biomass of two grass species is compared, while taking into consideration the average distance to ground water. However, they do not invest a lot into this model within the context of ANCOVA since they will analyze the same data in a mixed model design later. 
+
+```{r}
+data(ellenberg)
+df <- ellenberg[is.element(ellenberg$Species, c('Ap', 'Dg')),]
+df <- droplevels(df)
+str(df)
+#center cov 
+df$c_water <- scale(df$Water, center=T, scale=F)
+df$l_biomass <- log(df$Yi.g)
+ggplot(df, aes(x=c_water, y=l_biomass, color=Species)) +
+geom_point() +
+geom_smooth(method='lm')
+
+mod <- lm(l_biomass ~Species * c_water, data=df)
+summary(mod)
+head(model.matrix(mod))
+```
+
+We get:
+
+$$log(biomass) = 3.16 - 0.24SpeciesDg - 0.02water + 0.02SpeciesDf \times water$$
+
+A useful question in ecology that we could try to answer with this model is at which water level species Dg will outperform Ap. This is at the crosspoint in the above graph. 
+
+
+
+
+
+```{r}
+#unused book code 1
+n <- 50
+sigma <- 5
+b0 <- 2
+b1 <- 0.7
+x <- runif(n, 10, 30)
+yhat <- b0 + b1*x
+y <- rnorm(n, yhat, sd=sigma)
+plot(x,y, pch=16, las=1, cex.lab=1.2)
+abline(lm(y~x), lwd=2, col='blue')
+segments(x, fitted(lm(y~x)),x,y, lwd=2,col='orange', lty=3)
+
+#unused book code 2
+
+
+test <- expand.grid(sex=factor(c('male','female')), age=factor(c('juv','adu')))
+test$fit <-  model.matrix(~ sex + age, data=test) %*% coef(mod)
+test
+```
+
+
+## Lecture
+
+#### Planned contrast
+We can specify beforehand that we are only interested in testing the group differences between certain groups and leave out others. 
+
+```{r}
+#1. Test assumptions
+#Independence of residuals
+#homogeneity of Variance between groups 
+#normal distributions within groups
+
+#2. specify contrasts
+#3. perform analysis 
+#4. check models diagnostics 
+#5. Examine results
+
+
+```
+
+
+
+
+
+
+
+
+## References
