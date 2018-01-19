@@ -64,14 +64,14 @@ $Pr(y=1) = p_i$ and  $logit(p_i) = X_i\beta$
 
 
 ## Comparison with linear regression  
-In linear regression, the outcomes are assumed to be normally distributed with an  $E(Y|X)$, thus the mean is conditional on the observations. Subtracting that mean would result in the error term $\epsilon$, which is assumed to be independent of the predictor variables X and to follow a normal distribution with $\mu=0$ and similar variance $\sigma^2$ across all observations. In logistic regression, the observations $y\in\{0,1\}$  are assumed to follow a Bernoulli distribution, again with an $mean= E(Y|X)$. $E(Y|X)$ for a Bernoulli random variable is the probability $p$ of the event happening. There is no common error distribution that independent of the predictor values. For the prediction of $y_i$ given predictor(s) $X_i$, the error is $1-\pi$ occurring with probability $\pi$, and $0-\pi$ occurring with probability $1-\pi$.  
-To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimizes $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the us assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
+In linear regression, the outcomes are assumed to be normally distributed with an  $E(Y|X)$, thus the mean is conditional on the observations. Subtracting that mean would result in the error term $\epsilon$, which is assumed to be independent of the predictor variables X and to follow a normal distribution with $\mu=0$ and similar variance $\sigma^2$ across all observations. In logistic regression, the observations $y\in\{0,1\}$  are assumed to follow a Bernoulli distribution, again with a $mean= E(Y|X)$. $E(Y|X)$ for a Bernoulli random variable is the probability $p$ of the event happening. There is no common error distribution that is independent of the predictor values. For the prediction of $y_i$ given predictor(s) $X_i$, the error is $1-\pi$ occurring with probability $\pi$, and $0-\pi$ occurring with probability $1-\pi$.  
+To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimizes $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
 Despite these differences, the general principles that guide us when we perform linear regression also guide us through logistic regression.
 
 
 ## Interpreting the coefficients
 
-We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ @arm2016 that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $\beta_i$ (holding other predictors constant) would always lead to a change of the slope $\beta_i$ in $\hat{y}$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity. Comment out the following code and try for yourself:
+We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ [@arm2016] that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $\X_i$ (holding other predictors constant) would always lead to a change of the predicted value $\hat{y}$ by the slope $\beta_i$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity. Comment out the following code and try for yourself:
 
 ```{r}
 library(arm)
@@ -86,7 +86,7 @@ library(arm)
 #print(logit(0.9)-logit(0.93))
 ```
 
-In the example of the book, the model is $logit^-1 = -1.4+0.33X$. Thus, a one unit change in x, corresponds to a 0.33 positive change in the logit of the probability of Y. In this example the mean $\bar{x}$ is 3.1. To better grasp what this means, we can for example look at how a one unit change in x near the mean (e.g. one unit change from 3 to 2) changes P(Y|x). Here, this results in a change of ~ 8% (see @Gelman2007 for content of that example, but I will present a full example further below).
+In the example of the book, the model is $logit^{-1} = -1.4+0.33X$. Thus, a one unit change in x, corresponds to a 0.33 positive change in the logit of the probability of Y. To better grasp what this means, we can for example look at how a one unit change in x near the mean (here: $\bar{x} = 3.1$) (e.g. one unit change from 3 to 2) changes P(Y|x). Here, this results in a change of ~ 8% (see @Gelman2007 for content of that example, but I will present a full example further below).
 
 ```{r}
 ##Example 2:
@@ -120,11 +120,16 @@ head(df)
 ```
 
 
-_Switch_: Whether or not a household switched well  
-_Arsenic_: Arsenic load of well   
-_Dist_: Distance to the next good well (originally in m but this is rescaled here because the coefficient would be very small, which is misleading here)  
-_Assoc_:  1 if a household member is in any community organizations   
-_Educ_: Years of education of well user  
+_Switch_:  
+Whether or not a household switched well  
+_Arsenic_:  
+Arsenic load of well   
+_Dist_:  
+Distance to the next good well (originally in m but this is rescaled here because the coefficient would be very small, which is misleading here)  
+_Assoc_:   
+1 if a household member is in any community organizations   
+_Educ_:  
+Years of education of well user  
 
 To get an overview of our continuous predictors, lets take a look at their distribution
 ```{r}

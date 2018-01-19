@@ -1,0 +1,15 @@
+# Binary and multinomial logistic regression analyses
+
+## Functions for logistic regression:
+
+*The functions to perform this type of analysis are in the base R package. Under this headline, I cover only these functions necessary for the actual logistic regression analyses. Other functions that Bill used in the R script are presented below. We covered these also in many other homeworks unrelated to logistic regression, so feel free to skip them in case you are already familiar*
+
+
+
+
+
+
+### Foreign 
+### lattice
+### car 
+### VIM

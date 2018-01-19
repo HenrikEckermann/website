@@ -1,0 +1,81 @@
+I have difficulties to understand contrasts in R. I found several threads here with different questions for specific problems but could not figure out my problem. I tried setting contrasts according to [this](https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html) guideline but it does not really make sense to me and I will explain why further below. 
+
+I have this dataset:
+
+```r
+df <- read.csv('https://raw.githubusercontent.com/HenrikEckermann/website/master/mysite/main/templates/stats/anova/data.csv')
+str(df)
+```
+
+I want to test 2 hypotheses regarding this dataset and I have one question in addition. Hypotheses:    
+1. The outcome _y_ is lower for the control group than for the other groups.  
+2. The outcome of the control group is lower than the outcome of group 2 and group 3. 
+Additional question: How can I apply weighted effects codes that take the sample sized into consideration?
+
+
+To answer the second hypothesis, I could create contrasts in a way that each group gets tested against the control group using effect contrasts.
+
+```r
+#change order of levels
+levels(df$group)
+levels(df$group) <- c('control', '1', '2', '3')
+#Create coding scheme that compares each group with each other
+c1 <- c(-1, 1, 0, 0)
+c2 <- c(-1, 0, 1, 0)
+c3 <- c(-1,0, 0, 1)  
+mat <- cbind(c1,c2,c3)
+mat
+contrasts(df$group) <- mat
+model1 <- lm(y ~ group, df)
+summary(model2)
+```
+
+I thought the intercept should be the grand mean here but it is the mean of all means unweighted, as if the groups had the same sample sizes. I know I could also use treatment coding scheme for this simple example. I would then get an output where control can be the reference and the other coefficients are then the difference to that reference mean. But it should also work with this self created contrast matrix, should't it? If I use the information provided by this model (assuming the assumptions are met), then the control group has significantly lower outcome than group2 and significantly higher outcome than group 3.
+
+
+In theory, (if I understood it correctly), it should be possible to test both hypotheses with a single coding scheme so that the first contrast compares control versus the others, and then the second compares control versus group 2 and the last control versus group three. According to Field the first contrast should be `c1 <- c(-2, 0, 1, 1)`and then the second `c2 <- c(-1, 0, 1, 0)`and the third `c3 <- c(-1, 0, 0, 1)`. If i try that:
+
+```r
+#check means per group 
+by(df$y, df$group, mean)
+c1 <- c(-3, 1, 1, 1)
+c2 <- c(-1, 0, 1, 0)
+c3 <- c(-1, 0, 0, 1) 
+mat <- cbind(c1,c2,c3)
+mat
+contrasts(df$group) <- mat
+model2 <- lm(y ~ group, df)
+summary(model2)
+
+```
+But now, I cannot make any sense about the coefficients. Group1 seems to be the difference between the unweighted mean of the group mean and group 1. Is this model complete bullshit or can I interpret this in a meaningful way?
+
+I also tried to apply a coding scheme that adjusts for the size of each group as explained in [this tutorial](https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html):
+
+> 1. Specfiy the weights for your contrasts (and be sure to check the order of the levels of the factor, so your weights will line up properly)  
+> 2. Create a temporary matrix with each contrast as one row. The top row (for the constant) should be 1/j for j groups.  
+> 3. Get the inverse of that temporary matrix.  
+> 4. The first column of the inverse will be all 1’s. Drop that first column. The remaining columns are your contrast matrix.
+
+```r
+c1 <- c(-1, 36/196, 88/196, 72/196)
+c2 <- c(-1, 0, 88/160, 72/160)
+c3 <- c(-1, 0, 0, 1)
+mat.temp <- rbind(constant=1/4, c1,c2,c3)
+mat.temp
+
+mat <- solve(mat.temp)
+#here I already wonder why I dont get ones in the first row as described in the tutorial
+mat
+mat <- mat[,-1]
+mat
+contrasts(df$group) <- mat
+model4 <- lm(y ~ group, df)
+summary(model4)
+```
+
+I would be grateful if someone could explain to me the concept of contrasts and maybe show in this example how to apply it in a way that would be correct for these hypothesis/questions. I know there are a lot of articles out there on the internet but I found that the information provided is contradicting and that ultimately lead to me to post this question here in the hope someone with a good understanding can explain to me what is right/wrong.
+
+
+
+

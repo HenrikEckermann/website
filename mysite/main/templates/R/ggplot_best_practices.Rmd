@@ -6,6 +6,7 @@ output: html_notebook
 ```{r}
 library(ggplot2)
 str(mtcars)
+install.packages('Hmisc', repos = "http://cran.us.r-project.org")
 ```
 
 
@@ -29,7 +30,7 @@ A better alternative to get the same and even more information is plotting the i
 
 ```{r}
 ggplot(mtcars, aes(x=cyl,y=wt)) +
-  geom_point(position=position_jitter((width=0.2))) +
+  geom_jitter(width=0.2) +
   stat_summary(fun.y = mean, geom = 'point', fill = 'red') +
   stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = 0.2, col='red')
 ```

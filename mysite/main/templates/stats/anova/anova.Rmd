@@ -241,7 +241,11 @@ We can specify beforehand that we are only interested in testing the group diffe
 
 
 
-
+## Notes for contrasts in R:
+* there are only k-1 orthogonal comparisons (where k is the number of factor levels)
+* that means these are statistical independent 
+* choose contrasts based on your hypothesis before data collection
+* 
 
 
 
