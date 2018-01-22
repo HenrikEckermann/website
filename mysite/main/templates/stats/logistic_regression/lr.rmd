@@ -296,7 +296,7 @@ display(fit_7)
 It makes sense that education reduces the negative association between dist100 and the P(switch) and also that the association between arsenic and P(switch) gets slightly stronger with an increase in education. (Finally, @Gelman2007 bring in that we should think about standardizing all the predictors as a default option when fitting models with interactions.)
 
 ## Evaluation of a fitted  logistic regression
-To check whether the model is significant we check whether the model with the predictor leads to more accurate predictions than the model without the predictor. We look at the relative fit to evaluate whether one model fits better than the other. Again I use the comparison to linear regression to illustrate the procedure:  
+To evaluate a logistic model we check whether the model with the predictor leads to more accurate predictions than the model without the predictor. Again I use the comparison to linear regression to illustrate the procedure:  
 In linear regression, the baseline model only has the intercept $\beta_0$, which is the mean of the outcome variable. When used as an estimator, we can calculate the variance of the observed values from this baseline estimator. This variance is called the **_total sum of squares_** (SST). We calculate it as shown below. The total sum of squares can be partitioned into the **residual sum of squares** (RSS) and the **model Sum of Squares** (SSM).
 
 **Total sum of squares (SST)**:  

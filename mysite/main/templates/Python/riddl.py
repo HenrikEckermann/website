@@ -175,3 +175,30 @@ nl = [105, 110, 116, 101, 103, 114, 105, 116, 121]
 print([chr(x) for x in nl])
 
 ### -8- ###
+#I use bs4 to get some practice in using this useful tool (it is not necessary and there might be simpler ways)
+from bs4 import Comment, BeautifulSoup as bs 
+import requests
+#specify url level 8
+url = 'http://www.pythonchallenge.com/pc/def/integrity.html'
+#load the html file and store in r
+r = requests.get(url)
+soup = bs(r.text, 'lxml')
+#There are coords specified that I grab here
+coords = soup.map.area.get('coords')
+#store comment in result
+result = soup.findAll(text=lambda text:isinstance(text, Comment))
+s = result[0]
+s = s[6:]
+#extract un and pw
+import re
+pattern = re.compile(r'(.*)(\spw:)(.*)')
+un, nothing, pw = pattern.findall(s)[0]
+un = un[:-1]
+pw = pw[2:-1]
+un
+pw
+
+print([chr(int(x)) for x in coords.split(',')])
+len(coords.split(','))
+
+
