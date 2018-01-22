@@ -1,15 +1,264 @@
-# Binary and multinomial logistic regression analyses
+---
+title: 'Binary and multinomial logistic regression analysis'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/BibTex/statistic.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
 
-## Functions for logistic regression:
-
-*The functions to perform this type of analysis are in the base R package. Under this headline, I cover only these functions necessary for the actual logistic regression analyses. Other functions that Bill used in the R script are presented below. We covered these also in many other homeworks unrelated to logistic regression, so feel free to skip them in case you are already familiar*
 
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, warning=FALSE, message=FALSE)
+library(knitr)
+rmarkdown::render_site
+```
+
+
+*This document covers all the functions that Bill mentions in the lecture or used in his script about binary and multinomial logistic regression. The order of functions is as you would use it to perform logistic regression. For each function, the package to which it belongs is mentioned in parenthesis. If no package is mentioned, then the function belongs to the basic R environment. Also, for each function a short descriptions is given and the arguments that Bill presented are mentioned (not all possible arguments are listed but only the ones Bill presented. If you just want to check which functions you need to know, skim through the sidebar and check out the functions you do not yet know. The assumptions including the functions needed to test them are listed but the concepts behind logistic regression and the assumptions is only covered very superficially (if at all) like in the lecture. I think if you cover this document you will be able to answer all exam questions about logistic regression. However, I want to note that I would not perform this type of analysis in the way it is presented and I also would not present assumption testing in the way it was shown to us. The focus here is merely to prepare for the exam*
+
+You can follow along this document in RSTUDIO if you want. Just download this [file](https://github.com/HenrikEckermann/website/blob/master/mysite/main/templates/stats/logistic_regression/collaboration_for_exam/logreg_exam.rmd) and open it with RSTUDIO.
+
+
+
+## Import data
+
+### read.spss (foreign)  
+Used to import data from the *.SAV* fileformat that is used by SPSS. 
+
+###### to.data.frame
+Logical: Store as dataframe (it would otherwise we stored in a list format in the below example)  
+###### use.value.labels
+Logical: Lets R convert variables with value labels into R factors. Alternatively, you could leave it out and specify factors manually by using `factor(variable_name)`
+
+```{r}
+library(foreign)
+#optional: specify filename beforehand
+filename <- 'https://github.com/HenrikEckermann/website/raw/master/mysite/main/templates/stats/logistic_regression/collaboration_for_exam/logreg.sav'
+#the filename can be any direct link to the file. So, a filepath to a directory or a link like the one that I stored in the variable 'filename'
+df <- read.spss(filename, to.data.frame=TRUE, use.value.labels=TRUE)
+#The result is a dataframe:
+head(df)
+```
+
+## Missing value analysis
+
+### aggr (VIM)
+Use this function to analyze patterns of missingness:
+
+###### numbers
+Logical: Indicates whether the proportion or frequencies of the different combinations should be represented by numbers in the output.  
+
+###### prop 
+Logical: Indicates whether the proportion of missing/imputed values and combinations should be used rather than the total amount.  
+
+```{r}
+library(VIM)
+aggr(df, numbers=TRUE, prop=F)
+```
+
+### histMiss (VIM)
+
+```{r}
+histMiss(df[,c('age','satjob')])
+```
+
+
+### subset
+Since there are a lot of missing values, Bill performed the analyses only on a subset of the variables.
+
+###### boolean selection (logicals)
+To select rows, in this example an expression is used that results in either TRUE or FALSE. 
+
+###### select
+This argument here takes a character vector that specifies which columns will be included.
+
+
+```{r}
+#Before subsetting
+head(df)
+#subsetting
+df_sub <- subset(df, satjob!=FALSE & life != FALSE, select=c('id', 'sex', 'satjob', 'life'))
+#after subsetting
+head(df_sub)
+```
+
+### complete.cases & na.omit
+
+As an alternative to subset Bill presents these functions:
+
+```{r}
+#using complete.cases
+df_sub1 <- df[complete.cases(df), c(1, 3, 4, 7)]
+head(df_sub1)
+#using na.omit 
+df_sub2 <- na.omit(df[,c(1, 3, 4, 7)])
+head(df_sub2)
+```
+
+## Fit model 
+
+### glm 
+This function is used to perform the logistic regression.
+
+###### model 
+Specify the model with the notation like you are used to from the function `lm()`.
+
+###### data 
+Specifies the dataframe where the data is stored.
+
+###### family 
+Specifies the probability distribution function that is used for the generalized linear model. For logistic regression we will use the _binomial distribution_.
+
+_Note:_  
+_Bill notes that the default of the glm function is to use listwise deletion_
+
+```{r}
+logmodel <- glm(satjob ~ sex + life, data=df_sub, family=binomial())
+#model with interaction
+logmodel2 <- glm(satjob ~ sex * life, data = df_sub, family = binomial())
+```
+
+## Linearity 
+There should be a linear relationship between any continuous variable and the logit of the outcome. This can be tested by examining the interaction between the continuous predictor and its log transformation (only for continuous predictors).
+
+## Independence of errors
+
+### dwt (car (Companion to Applied Regression))
+To check for independence of errors. Just enter the model as argument as follows:  
+
+
+```{r}
+library(car)
+dwt(logmodel)
+```
+## Multicolliniearity
+We check multicollinearity with the variance inflation factor. For continuous predictors (which are not in this example) the GVIF can be used. For categorical predictors the $GVIF^{\frac{1}{2*Df}}$ should be used. Values above 10 indicate a problem.
+
+### vif (car)
+Only argument needed is the model.
+
+```{r}
+vif(logmodel)
+```
 
 
 
 
-### Foreign 
-### lattice
-### car 
-### VIM
+
+## Outliers & Influential cases
+Bill presents 3 steps to check for outliers and influential cases as well as some diagnostic plots:  
+
+
+1. Examine standardized residuals (to identify outliers)  
+* 5% of cases should have residuals > 2  
+* 1% should have residuals > 2.5
+* None should be >3  
+* It is not a general rule but Bill considers residuals > as outliers
+
+### rstandard
+To obtain the standardized residuals. The only argument needed is the general linear model (here the logistic regression model). Below I also use the functions `sum()`, `mean()` and `abs()`. I assumed that these are self explanatory because we all used them very often already.
+
+```{r}
+#store sresids in dataframe
+df_sub$sresiduals <- rstandard(logmodel)
+#check the criteria mentioned above
+mean(abs(df_sub$sresiduals)>2)
+mean(abs(df_sub$sresiduals)>2.5)
+sum(abs(df_sub$sresiduals)>3)
+#plot 
+densityplot(df_sub$sresiduals)
+```
+
+### densityplot (lattice)
+As the functionname implies, it creates a densityplot of the values that are passed in as an argument. There are several options available but these are not in the scope of this exam.
+
+```{r}
+library(lattice)
+densityplot(df_sub$sresiduals)
+```
+
+
+
+2. Examine DFBetas (to identify influential cases)  
+* no value should be above 1
+
+### dfbeta
+Again, use the model as argument and it will return the dfbeta values:
+
+```{r}
+dfbeta_val <- dfbeta(logmodel)
+sum(abs(dfbeta_val>1))
+max(dfbeta_val)
+hist(dfbeta_val)
+```
+
+3. Calculate leverage (to identify influential cases)  
+* Calculate: $\frac{k+1}{n}$, where k is the number of predictors
+* Values larger than 2x or 3x the resulting value can be considered influential cases
+
+### hatvalues
+
+With this function we can easily get the hatvalues (leverage of values). Again, the only argument needed is the model. I apply the rules mentioned above as well:
+
+```{r}
+df_sub$leverage <- hatvalues(logmodel)
+cutoff <- 3*(2+1)/(754)
+sum(df_sub$leverage>cutoff)
+densityplot(df_sub$leverage)
+
+```
+
+
+
+
+## Model fit 
+
+To assess model fit, we always compare the baseline model (with only the intercept) with the fitted model. The baseline model predicts according to the frequencies given in the dataset. Analogous to the statistics that reflect the unexplained variance  of the model in linear regression (e.g. RSS), for the logistic regression model we have the **log-likelihood** (LL). The higher the LL, the more variance is left unexplained by the model. We therefore use the LL to compare models. But instead of using the LL directly, we calculate the **deviance**, which is $-2*LL$ because this statistics follows the $\chi^2$ distribution and therefore allows for hypothesis testing. To check whether a model is better than another model (the one model must be nested in the other), we calculate the difference in the deviance (**likelihood-ratio**) and check whether this difference is significant:
+
+$\chi^2 = -2*LL_{baseline}-(-2*LL_{new})$, with  $df = k_{new} -k_{baseline}$
+
+### pchisq
+This function returns the p-value for a certain $\chi^2$ statistic. You need to pass in the following two arguments as shown in the example below. 
+
+###### $\chi^2$ statistic 
+
+###### degrees of freedom
+
+```{r}
+baseline_deviance <- logmodel$null.deviance
+new_deviance <- logmodel$deviance
+modelChi <- baseline_deviance - new_deviance
+chi_df <- logmodel$df.null - logmodel$df.residual
+chisq.prob <- 1 - pchisq(modelChi, chi_df)
+modelChi; chi_df; chisq.prob
+```
+
+Alternatively, we can use the function 'anova()' to let it check the difference between two models:
+
+```{r}
+anova(logmodel, logmodel2)
+```
+
+
+Bill also shows how to obtain the different pseudo R-squares:
+
+```{r}
+R2.hl<-modelChi/logmodel$null.deviance
+R.cs <- 1 - exp ((logmodel$deviance - logmodel$null.deviance)/754)
+R.n <- R.cs /( 1- ( exp (-(logmodel$null.deviance/ 754))))
+R2.hl; R.cs; R.n
+```
+
+
+## oddsratio
+
+```{r}
+exp(logmodel$coefficients)
+exp(confint(logmodel))
+```
