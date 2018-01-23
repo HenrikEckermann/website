@@ -19,6 +19,4 @@ def rename_files():
             os.rename('{}/{}'.format(path,s), '{}/{}'.format(path,s.replace(' ', '_').lower()))
     print('done')
 
-os.getcwd()
 
-rename_files()

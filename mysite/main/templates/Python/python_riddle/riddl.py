@@ -142,8 +142,7 @@ solution = 'oxygen'
 
 ### -7- ###
 from PIL import Image
-os.chdir('/Users/henrikeckermann/Documents/workspace/website/mysite/main/templates/Python/python_riddle/7')
-im = Image.open('oxygen.png')
+im = Image.open('7/oxygen.png')
 im.size
 im
 print(im.format, im.size, im.mode)
@@ -198,3 +197,29 @@ print(bz2.decompress(username),bz2.decompress(password))
 
 
 ### -9- ###
+import requests, re
+from bs4 import Comment, BeautifulSoup as bs
+from requests.auth import HTTPBasicAuth
+from PIL import Image
+import os
+
+
+with open('9/source.html') as html_file:
+    soup = bs(html_file, 'lxml')
+#grab comment 
+c = soup.findAll(text=lambda text:isinstance(text, Comment))[0][24:]
+c = c.replace('\n', '')
+pattern = re.compile(r'(.*)(second:)(.*)')
+sfirst, nothing, ssecond = pattern.findall(c)[0]
+len(sfirst.split(','))
+first = [(int(sfirst.split(',')[i]), int(sfirst.split(',')[i+1])) for i in range(0, 442, 2)]
+second = [int(x) for x in ssecond.split(',')]
+len(second) 
+len(first)
+im = Image.open('9/good.jpg')
+im_c = im.copy()
+width, length = im.size
+print(width, length)
+for i in first:
+    im.putpixel(i, (0, 0, 0, 255))
+im
