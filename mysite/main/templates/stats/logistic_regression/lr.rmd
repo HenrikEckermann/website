@@ -65,18 +65,18 @@ $Pr(y=1) = p_i$ and  $logit(p_i) = X_i\beta$
 
 ## Comparison with linear regression  
 In linear regression, the outcomes are assumed to be normally distributed with an $E(Y|X)$. The error term $\epsilon$ results from subtracting that conditional mean from the outcome and is assumed to be independent of the predictor variables X and to follow a normal distribution with $\mu=0$ and similar variance $\sigma^2$ across all observations. In logistic regression, the observations $y\in\{0,1\}$  are assumed to follow a Bernoulli distribution, again with a $mean= E(Y|X)$. $E(Y|X)$ for a Bernoulli random variable is the probability $p$ of the event happening. There is no common error distribution that is independent of the predictor values. For the prediction of $y_i$ given predictor(s) $X_i$, the error is $1-\pi$ occurring with probability $\pi$, and $0-\pi$ occurring with probability $1-\pi$.  
-To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimizes $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
+To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimize $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
 Despite these differences, the general principles that guide us when we perform linear regression also guide us through logistic regression.
 
 
 ## Interpreting the coefficients
 
-We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ [@arm2016] that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $X_i$ (holding other predictors constant) would always lead to a change of the predicted value $\hat{y}$ by the slope $\beta_i$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity. Comment out the following code and try for yourself:
+We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide a R package called _arm_ [@arm2016] that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $X_i$ (holding other predictors constant) would always lead to a change of the predicted value $\hat{y}$ by the slope $\beta_i$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity. Comment out the following code and try for yourself:
 
 ```{r}
 library(arm)
 ##Example 1: 
-## A change of ??X of ~.4 is equivalent to a 10% change in P(Y|X):
+## A change of ßX by ~.4 is equivalent to a 10% change in P(Y|X):
 #print(logit(0.5))
 #print(logit(0.6))
 #print(logit(0.5)-logit(0.6))
@@ -93,7 +93,7 @@ In the example of the book, the model is $logit^{-1} = -1.4+0.33X$. Thus, a one 
 #A 1 unit change in x (here from 3 to 2) results in a change in P(Y|X) of:
 p_change <- invlogit(-1.4+0.33*3) - invlogit(-1.4+0.33*2)
 # A 1 unit change (here from 1 to 2) results in a change in P(Y|X) of:
-p_change_2 <- invlogit(-1.4+0.33*1) - invlogit(-1.4+0.33*2)
+p_change_2 <- invlogit(-1.4+0.33*2) - invlogit(-1.4+0.33*1)
 ##Generally evaluating P(Y|x) at the mean
 #invlogit(coef(fit.1)[1] + coef(fit.1)[2]*mean(income))
 cat(p_change,',', p_change_2)
@@ -102,7 +102,7 @@ cat(p_change,',', p_change_2)
 
 
 
-@Gelman2007 also show that you could calculate the slope at one point for interpretation. More applicable I found the following rule of thumb: Divide $??_i$ by 4 to get the maximum change in probability for one unit change in the corresponding x. This upper bound is a reasonable approximation (only) near the midpoint of the logistic curve where P(Y|X) is close to 0.5. Another way of interpretation is using the **odds ratio**. The odds of an event are $\frac{p}{1-p}$. The ratio of two odds is called the odds ratio. An exponentiated logistic regression coefficient can be interpreted as an odds ratio and the change in odds resulting from a unit change in the corresponding predictor. If the odds ratio >1, then the odds get higher with a unit increase of the predictor and vice versa. This has implications also for the interpretation of the confidence intervals of the odds ratio. Not zero but one is the critical value here.
+@Gelman2007 also show that you could calculate the slope at one point for interpretation. More applicable I found the following rule of thumb: Divide $\beta_i$ by 4 to get the maximum change in probability for one unit change in the corresponding x. This upper bound is a reasonable approximation (only) near the midpoint of the logistic curve where P(Y|X) is close to 0.5. Another way of interpretation is using the **odds ratio**. The odds of an event are $\frac{p}{1-p}$. The ratio of two odds is called the odds ratio. An exponentiated logistic regression coefficient can be interpreted as an odds ratio and the change in odds resulting from a unit change in the corresponding predictor. If the odds ratio >1, then the odds get higher with a unit increase of the predictor and vice versa. This has implications also for the interpretation of the confidence intervals of the odds ratio. Not zero but one is the critical value here.
 
 $$log(\frac{Pr(y=1|x)}{Pr(y=0|x)}) =\alpha + \beta x$$
 
