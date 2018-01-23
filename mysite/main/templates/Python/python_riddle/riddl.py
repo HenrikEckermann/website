@@ -8,14 +8,16 @@ url = 'view-source:http://www.pythonchallenge.com/pc/def/ocr.html'
 from bs4 import BeautifulSoup, Comment
 import requests
 #open the html file 
-with open('python_riddle/2/ocr.html') as html_file:
+with open('2/ocr.html') as html_file:
     soup = BeautifulSoup(html_file, 'lxml')
 soup.findAll(text=lambda text:isinstance(text, Comment))
 match = soup.find_all(strin= lambda text:isinstance(text,Comment))
 print(match)
 #####################################################
 
-
+import os
+os.getcwd()
+os.chdir('/Users/henrikeckermann/Documents/workspace/website/mysite/main/templates/python/python_riddle')
 
 ### -1- ###
 #store string in variable
@@ -36,11 +38,6 @@ for i in range(len(s)):
 print(solution)
 
 ### -2- ###
-
-#Check current directory
-import os
-os.getcwd()
-os.chdir('python_riddle')
 #store string in s
 with open('2/source.txt', 'r') as source:
     s = source.read()
@@ -175,7 +172,7 @@ nl = [105, 110, 116, 101, 103, 114, 105, 116, 121]
 print([chr(x) for x in nl])
 
 ### -8- ###
-#I use bs4 to get some practice in using this useful tool (it is not necessary and there might be simpler ways)
+#I use bs4 to get some practice in using this useful tool (it will be more pythonic to use urlib)
 from bs4 import Comment, BeautifulSoup as bs 
 import requests
 #specify url level 8
@@ -183,22 +180,21 @@ url = 'http://www.pythonchallenge.com/pc/def/integrity.html'
 #load the html file and store in r
 r = requests.get(url)
 soup = bs(r.text, 'lxml')
-#There are coords specified that I grab here
-coords = soup.map.area.get('coords')
 #store comment in result
 result = soup.findAll(text=lambda text:isinstance(text, Comment))
-s = result[0]
-s = s[6:]
+s = result[0][6:]
 #extract un and pw
 import re
 pattern = re.compile(r'(.*)(\spw:)(.*)')
 un, nothing, pw = pattern.findall(s)[0]
-un = un[:-1]
-pw = pw[2:-1]
-un
-pw
+#decompress bytes (here I had some trouble finding out about bz2 and how to decompress the file that I originally had (because of '\\'))
+import bz2
+nun = "'{}".format(un)
+npw = pw[1:]
+import ast
+username = ast.literal_eval('b%s' % nun)
+password = ast.literal_eval('b%s' % npw)
+print(bz2.decompress(username),bz2.decompress(password))
 
-print([chr(int(x)) for x in coords.split(',')])
-len(coords.split(','))
 
-
+### -9- ###

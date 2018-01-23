@@ -64,7 +64,7 @@ $Pr(y=1) = p_i$ and  $logit(p_i) = X_i\beta$
 
 
 ## Comparison with linear regression  
-In linear regression, the outcomes are assumed to be normally distributed with an  $E(Y|X)$, thus the mean is conditional on the observations. Subtracting that mean would result in the error term $\epsilon$, which is assumed to be independent of the predictor variables X and to follow a normal distribution with $\mu=0$ and similar variance $\sigma^2$ across all observations. In logistic regression, the observations $y\in\{0,1\}$  are assumed to follow a Bernoulli distribution, again with a $mean= E(Y|X)$. $E(Y|X)$ for a Bernoulli random variable is the probability $p$ of the event happening. There is no common error distribution that is independent of the predictor values. For the prediction of $y_i$ given predictor(s) $X_i$, the error is $1-\pi$ occurring with probability $\pi$, and $0-\pi$ occurring with probability $1-\pi$.  
+In linear regression, the outcomes are assumed to be normally distributed with an $E(Y|X)$. The error term $\epsilon$ results from subtracting that conditional mean from the outcome and is assumed to be independent of the predictor variables X and to follow a normal distribution with $\mu=0$ and similar variance $\sigma^2$ across all observations. In logistic regression, the observations $y\in\{0,1\}$  are assumed to follow a Bernoulli distribution, again with a $mean= E(Y|X)$. $E(Y|X)$ for a Bernoulli random variable is the probability $p$ of the event happening. There is no common error distribution that is independent of the predictor values. For the prediction of $y_i$ given predictor(s) $X_i$, the error is $1-\pi$ occurring with probability $\pi$, and $0-\pi$ occurring with probability $1-\pi$.  
 To fit a linear regression model, the method of _least squares_ (OLS) is used most often. This method finds the parameters **$\beta_i$** that minimizes $\sum_{i=1}^n (y_i - \hat{y}_i)^2$. Under the assumption of $\varepsilon$ ~ $N(0,\delta^2)$, OLS yields estimators with certain desirable properties. However, when the outcome is a dichotomous variable, this is not the case, which is why _maximum likelihood estimation_ (ML) (that also leads to the least squares function if $\varepsilon$ ~ $N(0,\delta^2)$) is used. Simply said, ML provides estimates for the parameters of a model that make the data most likely.
 Despite these differences, the general principles that guide us when we perform linear regression also guide us through logistic regression.
 
@@ -297,7 +297,7 @@ It makes sense that education reduces the negative association between dist100 a
 
 ## Evaluation of a fitted  logistic regression
 To evaluate a logistic model we check whether the model with the predictor leads to more accurate predictions than the model without the predictor. Again I use the comparison to linear regression to illustrate the procedure:  
-In linear regression, the baseline model only has the intercept $\beta_0$, which is the mean of the outcome variable. When used as an estimator, we can calculate the variance of the observed values from this baseline estimator. This variance is called the **_total sum of squares_** (SST). We calculate it as shown below. The total sum of squares can be partitioned into the **residual sum of squares** (RSS) and the **model Sum of Squares** (SSM).
+In linear regression, the baseline model only has the intercept $\beta_0$, which is the mean of the outcome variable. When used as an estimator, we can calculate the variance of the observed values from this baseline estimator. A statistic that reflects this variance is the **_total sum of squares_** (SST). We calculate it as shown below. The total sum of squares can be partitioned into the **residual sum of squares** (RSS) and the **model sum of squares** (SSM).
 
 **Total sum of squares (SST)**:  
 $SST = \sum_{i=1}^n (y_i-\bar{y})^2$  
@@ -308,7 +308,7 @@ $RSS = \sum_{i=1}^n (y_i - \hat{y}_i)^2$
 **Model Sum of Squares (SSM)** or: **Regression sum of squares (SSR)**:  
 $SSM = SST - RSS = [\sum_{i=1}^n (y_i - \bar{y}_i)^2] - [\sum_{i=1}^n (y_i-\hat{y}_i)^2]$
 
-If we have no predictors in the model, then RSS = SST. And if RSS gets smaller with the inclusion of a predictor, then this is because the predictor explains some of the total variance around the base model and is possibly a better estimate than the mean. It should be clear from the above equation that SSM reflects the part of SST that the new model (the fitted regression line) can explain whereas RSS reflects the leftover that it still cannot explain. In ANOVA, the new model would be the group means of the outcome variable for each group given by the independent variable. 
+If we have no predictors in the model, then RSS = SST. And if RSS gets smaller with the inclusion of a predictor, then this is because the predictor explains some of the total variance around the base model leading to a better estimate than the mean alone. It should be clear from the above equation that SSM reflects the part of SST that the new model (the fitted regression line) can explain whereas RSS reflects the leftover that it still cannot explain. In ANOVA, the new model would be the group means of the outcome variable for each group given by the independent variable. 
 
 #### Log-likelihood, deviance and log-likelihood ratio
 Analogous to RSS, in logistic regression, deviation of observed to predicted values is reflected by the **log-likelihood** (LL):  
@@ -325,7 +325,7 @@ $D = -2* LL$
 * If we would add a predictor that is random noise, then the deviance is expected to decrease by 1 whereas we would expect it to decrease by >1 with an informative predictor (1 per predictor)
 
 
-@Hosmer2000 emphasizes that we can think of the deviance in the same way as we think of the RSS in the context of testing the significance of a model. To compare two models, we look at their difference in the deviance by calculating the **likelihood-ratio**, which follows the $\chi^2$ distribution:
+@Hosmer2000 emphasize that we can think of the deviance in the same way as we think of the RSS in the context of testing the significance of a model. To compare two models, we look at their difference in the deviance by calculating the **likelihood-ratio**, which follows the $\chi^2$ distribution:
 
 $\chi^2 = -2*LL_{baseline}-(-2*LL_{new})$, with  $df = k_{new} -k_{baseline}$,  
 

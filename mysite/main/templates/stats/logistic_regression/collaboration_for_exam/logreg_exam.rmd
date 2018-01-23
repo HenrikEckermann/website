@@ -24,16 +24,19 @@ rmarkdown::render_site
 
 You can follow along this document in RSTUDIO if you want. Just download this [file](https://github.com/HenrikEckermann/website/blob/master/mysite/main/templates/stats/logistic_regression/collaboration_for_exam/logreg_exam.rmd) and open it with RSTUDIO.
 
-
+# Binary logistic regression
 
 ## Import data
 
 ### read.spss (foreign)  
+
 Used to import data from the *.SAV* fileformat that is used by SPSS. 
 
-###### to.data.frame
+###### to.data.frame  
+
 Logical: Store as dataframe (it would otherwise we stored in a list format in the below example)  
-###### use.value.labels
+###### use.value.labels  
+
 Logical: Lets R convert variables with value labels into R factors. Alternatively, you could leave it out and specify factors manually by using `factor(variable_name)`
 
 ```{r}
@@ -70,7 +73,7 @@ histMiss(df[,c('age','satjob')])
 
 
 ### subset
-Since there are a lot of missing values, Bill performed the analyses only on a subset of the variables.
+Since there are a lot of missing values, Bill performed the analyses only on a subset of the variables. He used this subset function but also presented the alternatives shown further below.
 
 ###### boolean selection (logicals)
 To select rows, in this example an expression is used that results in either TRUE or FALSE. 
@@ -90,7 +93,7 @@ head(df_sub)
 
 ### complete.cases & na.omit
 
-As an alternative to subset Bill presents these functions:
+Alternative to subset.
 
 ```{r}
 #using complete.cases
@@ -116,7 +119,7 @@ Specifies the dataframe where the data is stored.
 Specifies the probability distribution function that is used for the generalized linear model. For logistic regression we will use the _binomial distribution_.
 
 _Note:_  
-_Bill notes that the default of the glm function is to use listwise deletion_
+_Bill notes that the default of the glm function is to use listwise deletion._
 
 ```{r}
 logmodel <- glm(satjob ~ sex + life, data=df_sub, family=binomial())
@@ -124,8 +127,33 @@ logmodel <- glm(satjob ~ sex + life, data=df_sub, family=binomial())
 logmodel2 <- glm(satjob ~ sex * life, data = df_sub, family = binomial())
 ```
 
+### relevel 
+In this example, to directly see whether routine&exciting lifestyles differ on job satisfaction, you need to let R pick a different reference group. One way is to change the order of the levels of the factor lifestyle with the function `relevel()`:
+
+```{r}
+df_sub$life <- relevel(df_sub$life, ref=2)
+logmodel1 <- glm(satjob ~ sex + life, data=df_sub, family=binomial())
+# here you can see that the reference group is now different:
+summary(logmodel)
+summary(logmodel1)
+```
+
 ## Linearity 
-There should be a linear relationship between any continuous variable and the logit of the outcome. This can be tested by examining the interaction between the continuous predictor and its log transformation (only for continuous predictors).
+There should be a linear relationship between any continuous variable and the logit of the outcome. This can be tested by examining the interaction between the continuous predictor and its log transformation (only for continuous predictors). Since, in this example there are no continuous variables, I simulate a continuous variable to show how this looks in R:
+
+_Note:_  
+_The function_ `rnorm()` _is covered in the introduction where we learned about simulating data._
+
+```{r}
+#simulate a continuous pred 
+df_sub$cont_pred <- rnorm(754,10,2)
+#check linearity assumption 
+##first create interaction term between cont_pred and its log 
+df_sub$cont_pred_int <- log(df_sub$cont_pred)*df_sub$cont_pred
+#run the model with the interaction included. If the interaction term is significant, then the assumption of linearity is violated
+logmodel3 <- glm(satjob ~ cont_pred + cont_pred_int, data = df_sub, family = binomial())
+summary(logmodel3)
+```
 
 ## Independence of errors
 
@@ -159,7 +187,7 @@ Bill presents 3 steps to check for outliers and influential cases as well as som
 * 5% of cases should have residuals > 2  
 * 1% should have residuals > 2.5
 * None should be >3  
-* It is not a general rule but Bill considers residuals > as outliers
+* It is not a general rule but Bill considers residuals >3 as outliers
 
 ### rstandard
 To obtain the standardized residuals. The only argument needed is the general linear model (here the logistic regression model). Below I also use the functions `sum()`, `mean()` and `abs()`. I assumed that these are self explanatory because we all used them very often already.
@@ -171,17 +199,19 @@ df_sub$sresiduals <- rstandard(logmodel)
 mean(abs(df_sub$sresiduals)>2)
 mean(abs(df_sub$sresiduals)>2.5)
 sum(abs(df_sub$sresiduals)>3)
-#plot 
+#plot (see below for function explanation)
+library(lattice)
 densityplot(df_sub$sresiduals)
 ```
 
 ### densityplot (lattice)
-As the functionname implies, it creates a densityplot of the values that are passed in as an argument. There are several options available but these are not in the scope of this exam.
+As the functionname implies, it creates a densityplot of the values that are passed in as an argument. There are several options available but these have not been presented in the material of logistic regression but should be covered in the graphics section or the introduction section.
 
 ```{r}
 library(lattice)
 densityplot(df_sub$sresiduals)
 ```
+
 
 
 
@@ -219,7 +249,11 @@ densityplot(df_sub$leverage)
 
 ## Model fit 
 
-To assess model fit, we always compare the baseline model (with only the intercept) with the fitted model. The baseline model predicts according to the frequencies given in the dataset. Analogous to the statistics that reflect the unexplained variance  of the model in linear regression (e.g. RSS), for the logistic regression model we have the **log-likelihood** (LL). The higher the LL, the more variance is left unexplained by the model. We therefore use the LL to compare models. But instead of using the LL directly, we calculate the **deviance**, which is $-2*LL$ because this statistics follows the $\chi^2$ distribution and therefore allows for hypothesis testing. To check whether a model is better than another model (the one model must be nested in the other), we calculate the difference in the deviance (**likelihood-ratio**) and check whether this difference is significant:
+```{r}
+summary(logmodel)
+```
+
+To assess model fit, we always compare the baseline model with the new model. The most basic model only has the intercept and predicts according to the frequencies given in the dataset. Analogous to the statistics that reflect the unexplained variance  of the model in linear regression (e.g. RSS), for the logistic regression model we have the **log-likelihood** (LL). The higher the LL, the more variance is left unexplained by the model. We therefore use the LL to compare models. But instead of using the LL directly, we calculate the **deviance**, which is $-2*LL$ because this statistic follows the $\chi^2$ distribution and therefore allows for hypothesis testing. To check whether a model is better than another model (the one model must be nested in the other), we calculate the difference in the deviance (**likelihood-ratio**) and check whether this difference is significant:
 
 $\chi^2 = -2*LL_{baseline}-(-2*LL_{new})$, with  $df = k_{new} -k_{baseline}$
 
@@ -239,18 +273,24 @@ chisq.prob <- 1 - pchisq(modelChi, chi_df)
 modelChi; chi_df; chisq.prob
 ```
 
-Alternatively, we can use the function 'anova()' to let it check the difference between two models:
+### anova
+As an alternative, we can use the function 'anova()' to let it check the difference between two models. It shows the likelihood-ratio (under deviance).
 
 ```{r}
-anova(logmodel, logmodel2)
+anv_object <- anova(logmodel, logmodel2)
+anv_object
+anv_object$Deviance[2]
 ```
 
 
-Bill also shows how to obtain the different pseudo R-squares:
+Bill also shows how to obtain the different pseudo R-squares but he does not explain anything further. I think it is sufficient if we know that there exist these analogues to $R^2$ (in linear regression) and that you can interpret them more or less in a similar way. Maybe also remember the names. 
 
 ```{r}
+#Hosmer & Lemeshow's
 R2.hl<-modelChi/logmodel$null.deviance
+#Cox & Snell's
 R.cs <- 1 - exp ((logmodel$deviance - logmodel$null.deviance)/754)
+#Nagelkerke's
 R.n <- R.cs /( 1- ( exp (-(logmodel$null.deviance/ 754))))
 R2.hl; R.cs; R.n
 ```
@@ -258,7 +298,75 @@ R2.hl; R.cs; R.n
 
 ## oddsratio
 
+The oddsratio for predictor $X_1$ are $e^{b_1}$ and can be interpreted as a factor by which the odds of the outcome happening change for a one unit increase in $X_1$. If the oddsratio is 1, then the odds of the outcome remain unchanged. Bill mentions in his presentation that he wants us to take the inverse but he gets confused himself and makes mistakes at this point. I don't know why he has a problem just reporting the oddsratio but I know that he cut off points in the last exam so if someone does know and is able to explain what he wants instead, maybe send me an email and I will add the explanation here.
+
+### exp 
+This is the math function that represents $e^(x)$. We can use it to interpret the coefficients as odds ratio.
+
 ```{r}
 exp(logmodel$coefficients)
+#the confint function is self-explanatory...
 exp(confint(logmodel))
 ```
+
+
+# Multinomial logistic regression 
+
+Unfortunately, Bill was not able to perform a complete analysis himself. He only covered it very superficially in the lecture and in the script he for example writes 'hmm cannot obtain diagnostics due to model complexity'. It is of course possible but he leaved it to us figuring this out. The residuals are for example stored in the model object. I will show how to extract them. But I think with regard to multinomial logistic regression, you should know about what is different to binary and there is only the additional assumption, that you have to use the mlogit function (and that this function is somewhat different to what we know from lm etc.).
+
+## Additional Assumption 
+The assumptions are similar to binary logistic regression and there is one additional assumption:  
+**Independence of Irrelevant Alternatives (IIA)**:  
+The odds of choosing A over B should not depend on whether some other alternative C is present or absent. There are the _Hausman-McFadden test_ and the _Small-Hsiao test_. 
+
+
+### mlogit.data (mlogit)  
+The function mlogit requires the date to be in a specific format. The function `mlogit.data()` can be used to achieve this and it Bill used the following function arguments:  
+
+###### choice   
+The variable name of the outcome as a string.
+###### shape   
+Choose either 'wide' or 'long'. Bill chose wide in the provided Rscript. 
+
+```{r}
+library(mlogit)
+mlog1 <-mlogit.data(df_sub, choice ="life", shape ="wide")
+head(mlog1)
+```
+
+### mlogit (mlogit)
+This is the function we use to fit the multinomial logistic regression model. The specification of the model is different compared to what we are used to. The difference is mentioned under the _model_ argument.
+
+###### model  
+The specification of the model is different than we are used to because we include a '1' followed by '|' to specify the intercept.  
+
+###### data  
+Dataframe as we are used to.  
+###### relevel   
+The same as in `lm()` and `glm()`.
+
+```{r}
+mlogmodel1<-mlogit(life ~ 1|sex * satjob, data = mlog1, reflevel = 1)
+mlogmodel2<-mlogit(life ~ 1|sex * satjob, data = mlog1, reflevel = 2)
+
+
+
+#diagnostic statistics 
+df_diag <- c(mlogmodel1$residuals, mlogmodel1$fitted.values, mlogmodel1$
+
+mlog1$dfbeta <- dfbeta(mlogmodel1) 
+mlog1$leverage <- hatvalues(mlogmodel1)
+
+#check out the model
+summary(mlogmodel1)
+summary(mlogmodel2)
+
+#oddsratios with CIs
+exp(mlogmodel2$coefficients)
+exp(confint(mlogmodel2))
+
+
+```
+
+
+
