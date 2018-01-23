@@ -7,7 +7,7 @@ output:
     toc_depth: 4
     df_print: paged
     theme: default
-bibliography: /Users/henrikeckermann/Documents/workspace/BibTex/statistic.bib
+bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
 csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
 ---
 
@@ -71,12 +71,12 @@ Despite these differences, the general principles that guide us when we perform 
 
 ## Interpreting the coefficients
 
-We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ [@arm2016] that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $\X_i$ (holding other predictors constant) would always lead to a change of the predicted value $\hat{y}$ by the slope $\beta_i$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity. Comment out the following code and try for yourself:
+We do not try to interpret the statistical significance of the intercept. @Gelman2007 provide an R package _arm_ [@arm2016] that can be helpful for the interpretation of the coefficients. Whereas in linear regression, a change of 1 unit in the predictor $X_i$ (holding other predictors constant) would always lead to a change of the predicted value $\hat{y}$ by the slope $\beta_i$, in logistic regression we can see that this is different when looking at the first example in the code block below. We see there that if we would add ~0.4 to the logit scale of P(Y|X), this translates to a change in probability of 10% in one case but 3% in the other case due to the non-linearity. Comment out the following code and try for yourself:
 
 ```{r}
 library(arm)
 ##Example 1: 
-## A change of ßX of ~.4 is equivalent to a 10% change in P(Y|X):
+## A change of ??X of ~.4 is equivalent to a 10% change in P(Y|X):
 #print(logit(0.5))
 #print(logit(0.6))
 #print(logit(0.5)-logit(0.6))
@@ -102,7 +102,7 @@ cat(p_change,',', p_change_2)
 
 
 
-@Gelman2007 also show that you could calculate the slope at one point for interpretation. More applicable I found the following rule of thumb: Divide $ß_i$ by 4 to get the maximum change in probability for one unit change in the corresponding x. This upper bound is a reasonable approximation (only) near the midpoint of the logistic curve where P(Y|X) is close to 0.5. Another way of interpretation is using the **odds ratio**. The odds of an event are $\frac{p}{1-p}$. The ratio of two odds is called the odds ratio. An exponentiated logistic regression coefficient can be interpreted as an odds ratio and the change in odds resulting from a unit change in the corresponding predictor. If the odds ratio >1, then the odds get higher with a unit increase of the predictor and vice versa. This has implications also for the interpretation of the confidence intervals of the odds ratio. Not zero but one is the critical value here.
+@Gelman2007 also show that you could calculate the slope at one point for interpretation. More applicable I found the following rule of thumb: Divide $??_i$ by 4 to get the maximum change in probability for one unit change in the corresponding x. This upper bound is a reasonable approximation (only) near the midpoint of the logistic curve where P(Y|X) is close to 0.5. Another way of interpretation is using the **odds ratio**. The odds of an event are $\frac{p}{1-p}$. The ratio of two odds is called the odds ratio. An exponentiated logistic regression coefficient can be interpreted as an odds ratio and the change in odds resulting from a unit change in the corresponding predictor. If the odds ratio >1, then the odds get higher with a unit increase of the predictor and vice versa. This has implications also for the interpretation of the confidence intervals of the odds ratio. Not zero but one is the critical value here.
 
 $$log(\frac{Pr(y=1|x)}{Pr(y=0|x)}) =\alpha + \beta x$$
 
@@ -112,7 +112,8 @@ Let us now consider the example that @Gelman2007 present in their book. The foll
 
 
 ```{r}
-setwd('/Users/henrikeckermann/Documents/Books/Extra/arm/ARM_Data/arsenic')
+setwd('/Users/henrikeckermann/Documents/workspace/website/mysite/main/templates/stats/logistic_regression/arm_lr/arsenic')
+
 #import dataset
 df <- read.table('wells.dat')
 df$dist100 <- df$dist/100
@@ -405,7 +406,7 @@ We can check this by looking at whether the interaction term between the predict
 Just as in ordinary regression, the error must be independent. Thus, the data must be independent. Check _Durban Watson Test_. @Gelman2007 mentions in the chapter about linear regression that this assumption is mostly important if we want to make predictions.
 3. Multicollinearity  
 Predictors should not be correlated too highly (check with VIF statistics, eigenvalues of the scaled uncentered cross-products matrix)
-​
+???
 #### Outliers:
 - standardized residuals: 
     - No more than 5% should have absolute values >2
@@ -413,7 +414,7 @@ Predictors should not be correlated too highly (check with VIF statistics, eigen
     - Absolute values >3 could be outlier
 - Calculate average leverage (k+1)/N and look for values > 2(or 3)* the average leverage
 - Look for absolute values of DFBeta>1
-​
+???
 
 
 
@@ -422,7 +423,7 @@ Predictors should not be correlated too highly (check with VIF statistics, eigen
 ##### 1. Plotting exercise   
 @Gelman2007 advice to plot this WITHOUT using a computer. If you want to do this for yourself first, then scroll down slowly so that you only can see the task, plot it and then you can compare:     
 
-###### (a) Pr(y = 1) = logit−1(x)  
+###### (a) Pr(y = 1) = logit???1(x)  
 
 ```{r}
 library(arm)
@@ -434,7 +435,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
 
-###### (b) Pr(y = 1) = logit−1(2 + x) 
+###### (b) Pr(y = 1) = logit???1(2 + x) 
 
 ```{r}
 y <- invlogit(2+x)
@@ -443,7 +444,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
 
-###### c) Pr(y = 1) = logit−1(2x)   
+###### c) Pr(y = 1) = logit???1(2x)   
 
 ```{r}
 y <- invlogit(2*x)
@@ -452,7 +453,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
  
-###### (d) Pr(y = 1) = logit−1(2 + 2x)  
+###### (d) Pr(y = 1) = logit???1(2 + 2x)  
 
 ```{r}
 y <- invlogit(2+2*x)
@@ -461,7 +462,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
 
-###### (e) Pr(y = 1) = logit−1(−2x)  
+###### (e) Pr(y = 1) = logit???1(???2x)  
 
 ```{r}
 y <- invlogit(-2*x)
@@ -471,7 +472,7 @@ ggplot(data, aes(x,y)) +
 ```
 
 ##### 2. Earnings predict graduation
-You are interested in how well the combined earnings of the parents in a child’s family predicts high school graduation. You are told that the probability a child graduates from high school is 27% for children whose parents earn no income and is 88% for children whose parents earn $60,000. Determine the logistic regression model that is consistent with this information. (For simplicity you may want to assume that income is measured in units of $10,000).
+You are interested in how well the combined earnings of the parents in a child???s family predicts high school graduation. You are told that the probability a child graduates from high school is 27% for children whose parents earn no income and is 88% for children whose parents earn $60,000. Determine the logistic regression model that is consistent with this information. (For simplicity you may want to assume that income is measured in units of $10,000).
 
 $P(gr=1|inc=0) = 0.27$  
 $P(gr=0|inc=60k) = 0.88$  
@@ -496,7 +497,7 @@ ggplot(data, aes(x,y)) +
 ```
 
 ##### 3. Midterm scores
-In a class of 50 students, a logistic regression is performed of course grade (pass or fail) on midterm exam score (continuous values with mean 60 and standard deviation 15). The fitted model is P(pass) = logit−1(−24 + 0.4x).  
+In a class of 50 students, a logistic regression is performed of course grade (pass or fail) on midterm exam score (continuous values with mean 60 and standard deviation 15). The fitted model is P(pass) = logit???1(???24 + 0.4x).  
 
 ###### (a) Graph the fitted model. Also on this graph put a scatterplot of hypothetical data consistent with the information given.  
 
@@ -514,8 +515,8 @@ ggplot(data=data.frame(x=c(0,100)), aes(x=x)) +
 
 ###### (b) Suppose the midterm scores were transformed to have a mean of 0 and standard deviation of 1. What would be the equation of the logistic regression using these transformed scores as a predictor?  
 
-$P(pass) = logit−1(−24 + 0.4x)$  
-&rarr; $P(pass) = logit−1(0 + 0.4*15)$ &rarr; $P(pass) = logit−1(6x)$
+$P(pass) = logit???1(???24 + 0.4x)$  
+&rarr; $P(pass) = logit???1(0 + 0.4*15)$ &rarr; $P(pass) = logit???1(6x)$
 
 
 ###### c) Create a new predictor that is pure noise and implement it in the model. How much does the model change?  
