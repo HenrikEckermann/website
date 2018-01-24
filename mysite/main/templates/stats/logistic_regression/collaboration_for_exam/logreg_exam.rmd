@@ -20,9 +20,8 @@ rmarkdown::render_site
 ```
 
 
-*This document covers all the functions that Bill mentions in the lecture or used in his script about binary and multinomial logistic regression. The order of functions is as you would use it to perform logistic regression. For each function, the package to which it belongs is mentioned in parenthesis. If no package is mentioned, then the function belongs to the basic R environment. Also, for each function a short descriptions is given and the arguments that Bill presented are mentioned (not all possible arguments are listed but only the ones Bill presented. If you just want to check which functions you need to know, skim through the sidebar and check out the functions you do not yet know. The assumptions including the functions needed to test them are listed but the concepts behind logistic regression and the assumptions is only covered very superficially (if at all) like in the lecture. I think if you cover this document you will be able to answer all exam questions about logistic regression. However, I want to note that I would not perform this type of analysis in the way it is presented and I also would not present assumption testing in the way it was shown to us. The focus here is merely to prepare for the exam*
+*This document covers all the functions that Bill mentions in the lecture or used in his script about binary and multinomial logistic regression. The order of functions is as you would use them to perform logistic regression. How to use this file for the exam: Scroll through this file and look at the table of content on the left side. For each subchapter, functions that Bill used will appear. Whenever you see a function you don't know, check it out. For each function, the package to which it belongs is mentioned in parenthesis. If no package is mentioned, the function belongs to the basic R environment. Also, for each function a short description is given and the arguments that Bill presented are mentioned (not all possible arguments are listed and in very obvious cases I don't mention the arguments or only mention them in the short written description). The assumptions, including the functions needed to test them, are listed but the concepts behind logistic regression and the assumptions are only covered very superficially like in the lecture since we already did that in the first course. I think if you cover and understand this document you will be able to answer all exam questions about logistic regression and multinomial regression. However, I want to note that I would not perform this type of analysis in the way it is presented here and I also would not present assumption testing in the way it was shown to us. The focus here is merely to prepare for the exam*
 
-You can follow along this document in RSTUDIO if you want. Just download this [file](https://github.com/HenrikEckermann/website/blob/master/mysite/main/templates/stats/logistic_regression/collaboration_for_exam/logreg_exam.rmd) and open it with RSTUDIO.
 
 # Binary logistic regression
 
@@ -34,7 +33,9 @@ Used to import data from the *.SAV* fileformat that is used by SPSS.
 
 ###### to.data.frame  
 
-Logical: Store as dataframe (it would otherwise we stored in a list format in the below example)  
+Logical: Store as dataframe (it would otherwise we stored in a list format in the below example)
+
+  
 ###### use.value.labels  
 
 Logical: Lets R convert variables with value labels into R factors. Alternatively, you could leave it out and specify factors manually by using `factor(variable_name)`
@@ -66,6 +67,7 @@ aggr(df, numbers=TRUE, prop=F)
 ```
 
 ### histMiss (VIM)
+To check for patterns of missingness between two variables. Here age and satjob are compared. We see that with increasing age there is more missingness occuring for the variable _satjob_.
 
 ```{r}
 histMiss(df[,c('age','satjob')])
@@ -138,8 +140,8 @@ summary(logmodel)
 summary(logmodel1)
 ```
 
-## Linearity 
-There should be a linear relationship between any continuous variable and the logit of the outcome. This can be tested by examining the interaction between the continuous predictor and its log transformation (only for continuous predictors). Since, in this example there are no continuous variables, I simulate a continuous variable to show how this looks in R:
+## Assumption 1: Linearity 
+There should be a linear relationship between any continuous variable and the logit of the outcome. This can be tested by examining the interaction between the continuous predictor and its log transformation (only for continuous predictors). Since, in this example there are no continuous variables, I simulate a continuous variable to show how this looks in R. Just check if the interaction is significant. If yes, then the assumption is violated.
 
 _Note:_  
 _The function_ `rnorm()` _is covered in the introduction where we learned about simulating data._
@@ -155,17 +157,17 @@ logmodel3 <- glm(satjob ~ cont_pred + cont_pred_int, data = df_sub, family = bin
 summary(logmodel3)
 ```
 
-## Independence of errors
+## Assumption 2: Independence of errors
 
-### dwt (car (Companion to Applied Regression))
-To check for independence of errors. Just enter the model as argument as follows:  
+### dwt (car)
+To check for independence of errors. Values <1 or >3 indicate violation. The close to 2, the better. Just enter the model as argument as follows:  
 
 
 ```{r}
 library(car)
 dwt(logmodel)
 ```
-## Multicolliniearity
+## Assumption 3: Multicolliniearity
 We check multicollinearity with the variance inflation factor. For continuous predictors (which are not in this example) the GVIF can be used. For categorical predictors the $GVIF^{\frac{1}{2*Df}}$ should be used. Values above 10 indicate a problem.
 
 ### vif (car)
@@ -187,7 +189,7 @@ Bill presents 3 steps to check for outliers and influential cases as well as som
 * 5% of cases should have residuals > 2  
 * 1% should have residuals > 2.5
 * None should be >3  
-* It is not a general rule but Bill considers residuals >3 as outliers
+* It is not a general rule but Bill considers residuals with an absolute value >3 as outliers
 
 ### rstandard
 To obtain the standardized residuals. The only argument needed is the general linear model (here the logistic regression model). Below I also use the functions `sum()`, `mean()` and `abs()`. I assumed that these are self explanatory because we all used them very often already.
@@ -247,15 +249,22 @@ densityplot(df_sub$leverage)
 
 
 
-## Model fit 
+## Model evaluation and interpretation
 
 ```{r}
 summary(logmodel)
 ```
 
+
+To evaluate whether a single predictor is significant, you could look at the **z-statistic (or Wald statistic)**. Above, the coefficients of lifeRoutine and lifeExciting are significant according to this statistic. However, several authors depreciate the use of this statistic for different reasons. @Field2012 mentions that large coefficients could make the SE inflate, leading to underestimation of the z-statistic.  
+
+
 To assess model fit, we always compare the baseline model with the new model. The most basic model only has the intercept and predicts according to the frequencies given in the dataset. Analogous to the statistics that reflect the unexplained variance  of the model in linear regression (e.g. RSS), for the logistic regression model we have the **log-likelihood** (LL). The higher the LL, the more variance is left unexplained by the model. We therefore use the LL to compare models. But instead of using the LL directly, we calculate the **deviance**, which is $-2*LL$ because this statistic follows the $\chi^2$ distribution and therefore allows for hypothesis testing. To check whether a model is better than another model (the one model must be nested in the other), we calculate the difference in the deviance (**likelihood-ratio**) and check whether this difference is significant:
 
 $\chi^2 = -2*LL_{baseline}-(-2*LL_{new})$, with  $df = k_{new} -k_{baseline}$
+
+I show below how to obtain the deviance of a model. Note that if you test a model against the model with only the intercept, you use the null-deviance. But if you compare models that have predictors you need to obtain the deviance of both models. Once you have the deviance statistics, you also obtain the degrees of freedom of and use the function `pchisq()` to calculate the likelihood ratio with the above formula and check the p-value of the likelihood ratio.
+
 
 ### pchisq
 This function returns the p-value for a certain $\chi^2$ statistic. You need to pass in the following two arguments as shown in the example below. 
@@ -273,8 +282,10 @@ chisq.prob <- 1 - pchisq(modelChi, chi_df)
 modelChi; chi_df; chisq.prob
 ```
 
+Thus, in this case the new model predicts the outcome significantly better than the baseline model.
+
 ### anova
-As an alternative, we can use the function 'anova()' to let it check the difference between two models. It shows the likelihood-ratio (under deviance).
+As an alternative, we can use the function 'anova()' to let it check the difference between two models. Here I compare logmodel2 with logmodel1 instead of logmodel1 against the nullmodel. It shows the likelihood-ratio (under deviance) but it does not calculate the significance.
 
 ```{r}
 anv_object <- anova(logmodel, logmodel2)
@@ -282,8 +293,7 @@ anv_object
 anv_object$Deviance[2]
 ```
 
-
-Bill also shows how to obtain the different pseudo R-squares but he does not explain anything further. I think it is sufficient if we know that there exist these analogues to $R^2$ (in linear regression) and that you can interpret them more or less in a similar way. Maybe also remember the names. 
+We can also obtain different _pseudo R-squares_ and use them as an effect size of our model. Bill does not explain much about them. I think it is sufficient if we know that there exist these analogues to $R^2$ (in linear regression) and that you can interpret them more or less in a similar way. Maybe also remember their names. I don't think that we need to remember the formula's to calculate them. Here is how you can calculate them in R:  
 
 ```{r}
 #Hosmer & Lemeshow's
@@ -296,9 +306,9 @@ R2.hl; R.cs; R.n
 ```
 
 
-## oddsratio
+## oddsratios
 
-The oddsratio for predictor $X_1$ are $e^{b_1}$ and can be interpreted as a factor by which the odds of the outcome happening change for a one unit increase in $X_1$. If the oddsratio is 1, then the odds of the outcome remain unchanged. Bill mentions in his presentation that he wants us to take the inverse but he gets confused himself and makes mistakes at this point. I don't know why he has a problem just reporting the oddsratio but I know that he cut off points in the last exam so if someone does know and is able to explain what he wants instead, maybe send me an email and I will add the explanation here.
+The oddsratio for predictor $X_1$ are $e^{b_1}$ and can be interpreted as a factor by which the odds of the outcome happening change for a one unit increase in $X_1$. If the oddsratio is 1, then the odds of the outcome remain unchanged. Bill mentions in his presentation that he wants us to take the inverse but he gets confused himself and makes mistakes at this point. I don't know why he has a problem just reporting the oddsratio but I know that he cut off points in the last exam so if someone does know and is able to explain what he wants instead, maybe send me a message and I will add the explanation here. Remember that the exponentiated confidence intervals for oddsratios should not include 1 for the coefficient to be a significant predictor as opposed to 0 for coefficients in e.g. linear regression.
 
 ### exp 
 This is the math function that represents $e^(x)$. We can use it to interpret the coefficients as odds ratio.
@@ -312,21 +322,18 @@ exp(confint(logmodel))
 
 # Multinomial logistic regression 
 
-Unfortunately, Bill was not able to perform a complete analysis himself. He only covered it very superficially in the lecture and in the script he for example writes 'hmm cannot obtain diagnostics due to model complexity'. It is of course possible but he leaved it to us figuring this out. The residuals are for example stored in the model object. I will show how to extract them. But I think with regard to multinomial logistic regression, you should know about what is different to binary and there is only the additional assumption, that you have to use the mlogit function (and that this function is somewhat different to what we know from lm etc.).
+Since we have more than 2 categories in the outcome variable, we need to choose a reference group. The other two categories are then compared to this reference group. If you would want to change the reference group, you can use the function `relevel()` or you simply specify it with the argument 'reflevel' in the function `mlogit`. There is also an additional assumption. Finally, instead of the function `glm()`, you have to use the `mlogit()` function (this function is somewhat different to what we know from lm what about the model specification). But for the rest everything is the same. So, if you understand the concepts of binary LR, then you can apply them here. The model diagnostics is exactly the same. But you should know that Andy Field does not show how to obtain hatvalues and dfbeta and Bill did write in his script that he was unable to do that. You can do this by hand in R but I am sure they do not expect this from us. Once you have these values, the interpretation would be the same.
 
-## Additional Assumption 
-The assumptions are similar to binary logistic regression and there is one additional assumption:  
-**Independence of Irrelevant Alternatives (IIA)**:  
+**Additional Assumption: Independence of Irrelevant Alternatives (IIA)**:  
 The odds of choosing A over B should not depend on whether some other alternative C is present or absent. There are the _Hausman-McFadden test_ and the _Small-Hsiao test_. 
 
-
-### mlogit.data (mlogit)  
-The function mlogit requires the date to be in a specific format. The function `mlogit.data()` can be used to achieve this and it Bill used the following function arguments:  
+### mlogit.data (mlogit)   
+The function mlogit requires the date to be in a specific format. The function `mlogit.data()` can be used to achieve this. Bill used the following function arguments:  
 
 ###### choice   
 The variable name of the outcome as a string.
 ###### shape   
-Choose either 'wide' or 'long'. Bill chose wide in the provided Rscript. 
+You could choose 'wide' or 'long'. Bill chose wide in the provided Rscript. 
 
 ```{r}
 library(mlogit)
@@ -334,7 +341,8 @@ mlog1 <-mlogit.data(df_sub, choice ="life", shape ="wide")
 head(mlog1)
 ```
 
-### mlogit (mlogit)
+### mlogit (mlogit)  
+
 This is the function we use to fit the multinomial logistic regression model. The specification of the model is different compared to what we are used to. The difference is mentioned under the _model_ argument.
 
 ###### model  
@@ -342,31 +350,37 @@ The specification of the model is different than we are used to because we inclu
 
 ###### data  
 Dataframe as we are used to.  
-###### relevel   
-The same as in `lm()` and `glm()`.
+
+###### reflevel   
+Reference group.
 
 ```{r}
 mlogmodel1<-mlogit(life ~ 1|sex * satjob, data = mlog1, reflevel = 1)
 mlogmodel2<-mlogit(life ~ 1|sex * satjob, data = mlog1, reflevel = 2)
 
-
-
-#diagnostic statistics 
-df_diag <- c(mlogmodel1$residuals, mlogmodel1$fitted.values, mlogmodel1$
-
-mlog1$dfbeta <- dfbeta(mlogmodel1) 
-mlog1$leverage <- hatvalues(mlogmodel1)
+#residuals and fitted values can be obtained from the model
+df_diag <- c(mlogmodel1$residuals, mlogmodel1$fitted.values)
 
 #check out the model
 summary(mlogmodel1)
 summary(mlogmodel2)
-
-#oddsratios with CIs
-exp(mlogmodel2$coefficients)
-exp(confint(mlogmodel2))
-
-
 ```
 
+This model output already shows the likelihood ratio test. This test here compares the model with predictors against the baseline model. If significant, it means that the model explains more variance than the baseline model. Instead of the deviance it also puts out the log-likelihood. So beware that if you want to calculate the likelihood ratio between two models that you need to multiply this by -2 to get deviance.
+
+
+
+
+```{r}
+#oddsratios with CIs
+data.frame(exp(mlogmodel2$coefficients))
+exp(confint(mlogmodel2))
+```
+
+The interpretation is exactly the same as with binary logistic regression. Remember that we specified a reference category above. In the model printed below the reference group is _exciting_. There is one significant predictor in the model below: Being not satisfied increases the odds of having a routine lifestyle by 3.07 (the odds of having routine life style versus exciting lifestyle). Remember that Bill wants us to report the odds ratio in a different way.
+
+```{r}
+summary(mlogmodel2)
+```
 
 
