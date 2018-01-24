@@ -20,3 +20,5 @@ def rename_files():
     print('done')
 
 
+os.getcwd()
+
