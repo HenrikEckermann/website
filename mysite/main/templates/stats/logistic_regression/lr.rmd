@@ -449,7 +449,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
 
-###### (b) Pr(y = 1) = $logit{-1}(2 + x)$  
+###### (b) Pr(y = 1) = $logit^{-1}(2 + x)$  
 
 ```{r}
 y <- invlogit(2+x)
@@ -458,7 +458,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
 
-###### c) Pr(y = 1) = $logit{-1}(2x)$   
+###### c) Pr(y = 1) = $logit^{-1}(2x)$   
 
 ```{r}
 y <- invlogit(2*x)
@@ -467,7 +467,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
  
-###### (d) Pr(y = 1) = $logit{-1}(2 + 2x)$  
+###### (d) Pr(y = 1) = $logit^{-1}(2 + 2x)$  
 
 ```{r}
 y <- invlogit(2+2*x)
@@ -476,7 +476,7 @@ ggplot(data, aes(x,y)) +
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
 ```
 
-###### (e) Pr(y = 1) = $logit{-1}(-2x)$  
+###### (e) Pr(y = 1) = $logit^{-1}(-2x)$  
 
 ```{r}
 y <- invlogit(-2*x)
@@ -529,7 +529,7 @@ ggplot(data=data.frame(x=c(0,100)), aes(x=x)) +
 
 ###### (b) Suppose the midterm scores were transformed to have a mean of 0 and standard deviation of 1. What would be the equation of the logistic regression using these transformed scores as a predictor?  
 
-P(pass) = $logit{-1}(-24 + 0.4x)$  
+P(pass) = $logit^{-1}(-24 + 0.4x)$  
 &rarr; $P(pass) = logit{-1}(0 + 0.4*15)$ &rarr; $P(pass) = logit{-1}(6x)$
 
 
