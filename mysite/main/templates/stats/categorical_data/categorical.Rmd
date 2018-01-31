@@ -1,0 +1,140 @@
+---
+title: 'Categorical Data analysis in R'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+
+```{r}
+library(MASS)
+```
+
+# 2 categories
+
+## Pearson's chi-square test 
+
+This test compares the frequencies you observe for each category with the frequencies you would expect by chance. The expected frequenc for a given cell is $E_{ij} = \frac{row total_i \times column total_j}{n}$. Then for each cell you subtract from the actual value the expected value, square this and add to it the same for every cell:  
+
+<br>
+
+$$\chi^2 = \sum \frac{(observed_{ij}-E_{ij})^2}{E_{ij}}$$  
+
+<br>
+
+$$df= (nrow -1)(ncol-1)$$
+
+
+
+### Yates correction
+
+Because the above chi-square test tends to make a type I error when you have a $2x2$ design, Yates suggested the following correction: 
+
+$$\chi^2 = \sum \frac{(\mid observed_{ij}-E_{ij}\mid -0.5)^2}{E_{ij}}$$
+
+@Field2012 points out that there is likely overcorrection and it produces too small $\chi^2$ values and this is therefore best ignored or at least dive deeper into that in case it gets important!
+
+## Fisher's exact test 
+
+For the above statistic to really follow the $\chi^2$ distribution, it requires expected frequencies >5. If not, the fisher's exact test gives a more accurate answer what the probability of the $\chi^2$ value is. 
+
+### CrossTable
+
+```{r}
+#for CrossTable
+library(gmodels)
+df <- read.delim('/Users/henrikeckermann/Documents/books/extra/field/cats.dat', header=T)
+head(df)
+CrossTable(df$Training, df$Dance, chisq=T, fisher=T, expected=T, sresid=T, prop.c = FALSE, prop.r = FALSE, prop.t = FALSE, prop.chisq = FALSE, format='SPSS')
+```
+
+To interpret this we first look at the p-value for the chi-square statistic. Then we can interpret the standardized residuals as z-values. Thus, if they are > 1.96, then the effect can be seen as significant. Here: Food as reward was significant in both catregories of dances (yes&no). When food was used, significantly more cats as expected danced and significantly less cats as expected did not dance. This way we can attribute the significance of the overall model to the variable food because the other cells did not contribute significantly. 
+
+The effect size can best be described with the oddsratio that is also given in the output (incl. confidence interval) if you include the option `fisher=TRUE`. Here, the oddsratio is 6.58 and means that the odds that a cat dances when it is trained with foods is 6.58 times higher compared to the odds when she was trained with affection.
+
+## likelihood ratio 
+According to @Field2012, this statistic should be roughly the same as Pearson's chi-square but is preferred when samples are smaller.
+
+$$L\chi^2 = 2\sum observed_{ij}ln \Bigg(\frac{observed_{ij}}{model_{ij}}\Bigg)$$
+
+The df are similar as in Pearson's chi square test:  
+
+$$df= (nrow -1)(ncol-1)$$
+
+
+## Assumptions 
+1. Data must be independent. You cannot use a chi-square test for repeated measures design.
+2. The **expected** frequencies should be >1 and 80% >5 (otherwise use Fisher's exact test) and you should have 5x the number of cases as you have cells.
+
+##### Problem
+
+As we also know from other tests, even small differences will get significant with large enough sample sizes.
+
+
+# >2 categories
+
+Loglinear analysis can analyze categorical data when we have more than 2 categories. @Field2012 does explain that chi-square and loglinear analyses can be expressed as a linear model if we use the log of the outcome and instead of the mean we use the expected values of the frequencies. I won't cover the details of this because this is document is merely a quick summary for the exam and I only could skim through the material. Important to know is that we start with a _saturated_ model that as all categories and all possible interactions included. Then using backward selection we first take out the highest interaction and then check whether the model is significantly worse. If not, then the interaction (or main effect) was not significant. As soon as the model predicts significantly worse we stop and interpret the better model and ignore all lower order effects.
+
+```{r echo=FALSE}
+df <- read.delim('/Users/henrikeckermann/Documents/books/extra/field/CatRegression.dat', header=T)
+head(df)
+lmod <- lm(LnExpected ~ Training + Dance, df)
+summary(lmod)
+```
+
+## Assumptions 
+
+1. Independent data (just as for chi-square)
+2. It is ok to have up to 20% of cells with expected frequencies less than 5 but all cells must have expected frequencies greater than 1. Otherwise there will be a radical reduction in test power.
+
+### xtabs & loglm
+
+```{r}
+df <- read.delim('/Users/henrikeckermann/Documents/books/extra/field/CatsandDogs.dat', header=T)
+head(df)
+
+#create separate dfs because the crosstab function cannot implement 3 var 
+justCats <- subset(df, Animal=='Cat') 
+justDogs <- subset(df, Animal=='Dog')
+CrossTable(justCats$Training, justCats$Dance, sresid=T, prop.t=F, prop.c= F, prop.chisq=F, format='SPSS')
+CrossTable(justDogs$Training, justDogs$Dance, sresid=T, prop.t=F, prop.c= F, prop.chisq=F, format='SPSS')
+
+
+#or alternatively this way
+cd.cont <- xtabs(~ Animal + Training + Dance, data=df)
+cd.cont
+
+#first we create the saturated model 
+saturated <- loglm(~ Animal * Training * Dance, data = cd.cont)
+summary(saturated)
+```
+
+```{r}
+#Then we remove the three way interaction 
+nothreew <- loglm(~ Animal + Training + Dance + Animal:Training + Animal:Dance + Training:Dance , data = cd.cont)
+summary(nothreew)
+```
+
+### anova
+
+```{r}
+#to compare the models we can use the anova function 
+anova(saturated, nothreew)
+```
+
+Since the model gets significantly worse, we know that the three way interaction is an important predictor and he stop here and interpret the saturated model. To interpret the threeway interaction, we look at the mosaic plot:
+
+### mosaicplot
+
+```{r}
+mosaicplot(cd.cont, shade = T, main = 'Cats and Dogs')
+```
+
+Interpret as follows:
+The red color means less values were found thant expected and blue mean more than expected were found.

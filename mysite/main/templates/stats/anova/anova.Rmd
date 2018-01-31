@@ -1,6 +1,13 @@
 ---
 title: 'AN(C)OVA in R'
-bibliography: /Users/henrikeckermann/Documents/workspace/website/mysite/main/stats/statistic.bib
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
 csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
 ---
 
@@ -26,7 +33,7 @@ $$RSS = \sum_{i=1}^n (y_i - \hat{y}_i)^2$$
 
 In the context of ANOVA, this is often referred to as _sum of squares within_ (SSW). As in ANOVA the model is the corresponding group mean, we can write more specifically:  
 
-$$SSW=\sum{i=1}^n(y_i-\bar{y}_{gi})^2$$
+$$SSW=\sum_{i=1}^n(y_i-\bar{y}_{gi})^2$$
 
 If we subtract RSS from SST, we end up with the _model sum of squares_. In the context of ANOVA, the term is called _sum of squares between_ (SSB):
 
@@ -73,33 +80,20 @@ summary(mod)
 aovmod <- aov(y~group, df)
 summary(aovmod)
 ```
+
+```{r}
+library(psych)
+describe(df)
+str(df)
+```
+
 As we can see, the coefficients of our model reflect the group means as described above: $\hat{y} =$ `r coefs[1]` + `r coefs[2]`$group_2$ - `r coefs[2]`$group_3$. In the summary of our model we also find the significant F-statistic. Now we could do post hoc tests to check which groups differ (see e.g. Bonferroni or Tukey). These tests are used because if one conducts e.g. multiple t-tests, there is a 5% chance to falsely get a significant result for each test just by chance. I will not cover post hoc test at this point but will mention an advice about it that was cited in @Korner-Nievergelt2015 later.
 
 
 #### A Bayesian way
 Using the Bayesian framework we could ask in how far the data support the hypothesis that the mean of group 2 or group 3 is greater than mean of group 1. We could simulate the posterior distribution of the parameters and their differences. Then we could calculate the 95% credible intervals (CrI) to give an estimate. Here is how such a simulation could look like using the _arm_ package. I used different parameters for the fake data simulation to get a feeling for these tools:
 
-```{r}
-bsim <- sim(mod, n.sim=1000)
-m.g1 <- coef(bsim)[,1]
-m.g2 <- coef(bsim)[,1] + coef(bsim)[,2]
-m.g3 <- coef(bsim)[,1]+ coef(bsim)[,3]
-df <- data.frame(m.g1,m.g2,m.g3)
-dfl <- melt(df)
-head(df)
-#Posterior distribution of group means
-qplot(value, data=dfl, alpha = 0.5, geom='density', fill=variable)
-#difference between group 2 and 1
-d.g1.2 <- df$m.g1-df$m.g2
-mean(d.g1.2)
-quantile(d.g1.2, prob=c(0.025,0.975))
-#difference between group 3 and 1
-d.g1.3 <- df$m.g1-df$m.g3
-mean(d.g1.3)
-quantile(d.g1.3, prob=c(0.025,0.975))
-#how strongly do the data support that means group 2 > group 1?
-mean(m.g3>m.g1)
-```
+
 
 I advice you to also play with the means in the data simulation a little. In the current setting, g2 is larger than g1 in `r mean(m.g2>m.g1)*100`% of all simulated cases whereas g3 is larger than g1 in `r mean(m.g3>m.g1)*100`% of the cases.  
 
@@ -149,11 +143,13 @@ summary(amod)
 aovprint <- apa_print.aov(amod)
 ```
 
+
+
 $$wing=63.5 -2.67female + 1.33adu -1.04fem \times adu$$
 
 This means: In our data, the mean wing length of male, juvenile birds is 63.5. Male adults have 1.33 longer wings than that. Female, juvenile birds have 2.67 shorter wing length compared to juvenile males and female adult birds have 0.29 shorter wing length than juvenile male birds. As you can see, for the two-way Anova, I used the function _aov_, which conducts sequential F-test. This type of testing delivers the following output:
 
-`r aovprint$table`
+`r print(aovprint$table)`
 
  First the function _aov_ tests whether _sex_ explains a significant amount of variance over the baseline model. Then it checks whether _age_ explains significant amount of variance when added to the model where _sex_ is already implemented and so forth... Another method would be marginal F-tests, which tests whether any of the variables explains a significant amount of variance when all other variables are already in the model. It is important to know that the order in which we enter the variables in the function determines in which order the sequential analysis works. In case, the F-test yields a significant result, post hoc test could be conducted to further analyze which group means differ. 
  In the Bayesian framework we have a 5% chance that the true value lies outside the credible interval (CrI) every time we calculate it, so there is also a similar problem. Personally, I will stick with the following advice given by @Gelman2007: 
@@ -197,26 +193,6 @@ A useful question in ecology that we could try to answer with this model is at w
 
 
 
-```{r}
-#unused book code 1
-n <- 50
-sigma <- 5
-b0 <- 2
-b1 <- 0.7
-x <- runif(n, 10, 30)
-yhat <- b0 + b1*x
-y <- rnorm(n, yhat, sd=sigma)
-plot(x,y, pch=16, las=1, cex.lab=1.2)
-abline(lm(y~x), lwd=2, col='blue')
-segments(x, fitted(lm(y~x)),x,y, lwd=2,col='orange', lty=3)
-
-#unused book code 2
-
-
-test <- expand.grid(sex=factor(c('male','female')), age=factor(c('juv','adu')))
-test$fit <-  model.matrix(~ sex + age, data=test) %*% coef(mod)
-test
-```
 
 
 ## Lecture
@@ -247,6 +223,250 @@ We can specify beforehand that we are only interested in testing the group diffe
 * choose contrasts based on your hypothesis before data collection
 * 
 
+
+
+
+# Field and Bill for exam 
+
+
+Play around with contrasts and check whether the order of input matters when using type I ss as Bill said..
+
+## One way 
+
+```{r}
+library(multcomp)
+library(compute.es)
+library(pastecs)
+```
+
+### Assumptions
+
+#### Homogeneity of variance 
+
+```{r}
+leveneTest()
+```
+
+#### Independence of observations
+
+```{r}
+dwt()
+```
+
+#### Normal distribution within groups
+
+```{r}
+by()
+```
+
+### Post Hoc Tests 
+- with no specific hypothesis before the experiment, use post hoc tests (otherwise use planned contrasts)
+- with equal sample sizes use Tukey
+- if you want guarenteed control over type I error rate, use Bonferroni
+
+```{r}
+#Tukey --> Multcomp
+object <- glht(model, linfct=mcp(dose='Tukey'))
+summary(object)
+
+#Bonferroni
+pairwise.t.test(datavector, category, p.adjust.method='bonderroni')
+pairwise.t.test(datavector, category, p.adjust.method='BH')
+```
+
+### Effect sizes
+
+Report effect sizes instead of p-values because of the known advantages. The function below can report multiple effect sizes if you put in arguments as shown:
+
+```{r}
+mes()
+```
+
+## ANCOVA 
+
+### Assumptions 
+- Independence of covariate and IV
+  - We do not want the IV and the covariate to be correlated because it would otherwise explain variance that the IV might explain. We want to remove error variance but not take away variance the IV actually can explain.
+- Linearity between covariate and DV
+- Homogeneity of regression slopes
+  - The relationship between the covariate and DV should be similar for all groups
+
+## Factorial ANOVA 
+
+### Assumptions 
+
+**Homogeneity of variance:**  
+Same as before but also check for the interaction! 
+
+```{r}
+##you can do it this way 
+#leveneTest(gogglesData$attractiveness, interaction(gogglesData$alcohol, gogglesData$gender))
+##but then you have to run two other lines as well for the main effects. So you could also do:
+#leveneTest(model)
+```
+
+**Independence of observations:**  
+Should be fulffilled by definition in experimental design
+
+**Normality of residuals WITHIN groups:**  
+
+
+## Repeated measures 
+
+### Assumptions 
+
+**Sphericity:**  
+Check out if the the variance of the difference between pre/post, pre/follow up and post/follow up are homogeneous. If not, then the assumption of sphericity is violated (which is generally the case). This makes of course only sense if you have more than 2 groups. To test this assumption use Mauchly test. If significant report adjusted F-ratios (e.g. Greenhouse G. adjusted).
+
+**Independence of Errors:**  
+Violated by definition in repeated measures. 
+
+### Lord' Paradox
+- Depending on whether you look for relative or absolute change you may find a difference or not.
+- Randomization check: If you find significant differences in the outcome in a pre condition between groups of subjects (example do males gain more weight than females on a specific diet over time), you might better choose the covariate approach to account for the difference whereas you better choose the difference score approach (repreated measures) when there are no differences in the start.
+
+
+## MANOVA 
+
+use `cbind` to to create a object that you use in the function `manova`. 
+
+### Assumptions
+
+**Homogeneity of variance-covariance matrices:**  
+The Box-M test tests all the assumptions (homogeneity of varicance and homogeneity of covariance) at once. But it is very senseitive so you set the p-value at <.001.
+
+**Independence of observations:**  
+Of course not for the within subjects effects but since you can have both within and between in MANOVA, this assumptions needs to be met for between subjects effects.
+
+**Multivariate normality:**  
+Since we have multiple DV, we have to look if all are normally distributed:  
+- Shapiro-Wilks multivariate test in mvnormtest package 
+- mardia's test in package MVN 
+  - skewness/kurtosis
+  - output in plain english what the outcome was 
+
+
+**Multivariate outliers:**  
+- ac.plot from package mvoutlier provides colorcoding of potential outliers 
+- 
+
+
+
+
+
+The 5 steps in Anova
+1. Test Assumptions
+2. specify contrasts
+3. Perform analysis
+4. check model diagnostics
+5. examine results
+
+
+
+## Type sum of squares
+
+type 1 (sequential):
+- Order matters
+- step by step and the next can only explain variance the first one did not explain
+
+type 2:
+- the main effects are prioritized over interactions. First variance explained by main effects, then interaction. So, if you are interested in interactions, don't use this but this is most important for main effects
+
+type 3 (marginal or weighted):
+- All effects have equal weight. When interactions are of interest this is the way to go (order does not matter).
+
+
+
+Options to model the complexer designs
+
+
+
+## First option: Ez Anova
+
+between and/or within participant effects
+
+```{r}
+library(ez)
+#ezAnova(data = df, dv= .(DV), wid = .(id), within = (IV1, IV2), between = .(IV3, IV4), type = 3, detailed= FALSE)
+```
+## Second option: aov_ez, aov_4, aov_car (afex package)
+
+This package has type III ss as default and for between subjects effects it uses zero sum contrasts.
+```{r}
+library(afex)
+aov_ez('id',)
+```
+
+Alternative to pairwise t-test for obtaining pairwise comparisons is the least squares means method (lsmeans). Tests pairwise using Tukey correction.
+
+
+The general linear model can be applies to all ANOVA techniques but I should know format requirements for the single techniques, e.g.:
+- a within design needs long format 
+- afex() and ezAnova are most flexible functions
+- lm() can only accommodate one DV (or one aggregate)
+
+Zero-sum codes are preferable
+- specify and interpret accordingly
+
+ANOVAs can be performed using various R packages
+- aov(type I ss), Anova(type III ss out ob aov object), anova(compare nested models), ezAnova & manova
+
+
+
+What are the different functions we have used to calculate correlations?
+
+```{r echo=FALSE}
+#simulate dataset
+b0 <- 12 #true mean group 1
+b1 <- 1.5 #difference in true means between group 2 to group 1
+b2 <- -2 #difference in true means between group 1 and group 3
+sigma <- 2 #residual SD (=within group SD)
+n <- 90
+group <- factor(c(rep('a', 20), rep('b', 40), rep('c', 30)))
+#simulate the y variable
+simresid <- rnorm(n, mean=0, sd=sigma)
+y <- b0 + as.numeric(group=='2') *b1 + as.numeric(group=='3')*b2 + simresid
+df <- data.frame(group, y)
+```
+
+```{r}
+x <- rnorm(30, mean=10, sd= 2)
+y <- rnorm(30, mean=13, sd= 2)
+cor(x,y)
+cor.test(x,y)
+#psych
+corr.test(data.frame(x,y))
+library(ltm)
+rcor.test(data.frame(x,y))
+
+library(Hmisc)
+rcorr(x,y)
+```
+
+
+### Play with effect codes
+
+```{r}
+#for dummy codes it is clear: Intercept=mean, and coefs = diffs to mean 
+contrasts(df$group) <- contr.treatment
+contrasts(df$group)
+m1 <- lm(y ~ group, df)
+summary(m1)
+```
+
+```{r}
+contrasts(df$group) <- contr.sum
+contrasts(df$group)
+#I expect the intercept to be the unweighted grand mean, the first coef reflects the diff of gm to mean group a, the second coef to mean group b. Group c is not reflected by the coefs 
+m2 <- lm(y~group, df)
+summary(m2)
+by(df$y, df$group, mean)
+
+
+library(car)
+Anova(m1, type=3)
+Anova(m2, type=3)
+```
 
 
 ## References

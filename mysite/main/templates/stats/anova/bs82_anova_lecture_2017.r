@@ -17,8 +17,8 @@ setwd("C:/Users/U148154/Dropbox/Analyzing in R 2016")
 
 id<-(1:15)
 libido<-c(3,2,1,1,4,5,2,4,2,3,7,4,5,3,6)
-#dose<-c(rep(1,5),rep(2,5), rep(3,5))
-#dose<-factor(dose, levels = c(1:3), labels = c("Placebo", "Low Dose", "High Dose"))
+dose<-c(rep(1,5),rep(2,5), rep(3,5))
+dose<-factor(dose, levels = c(1:3), labels = c("Placebo", "Low Dose", "High Dose"))
 dose<-gl(3,5, labels = c("Placebo", "Low Dose", "High Dose"))
 viagraData<-data.frame(dose, libido)
 
@@ -73,6 +73,7 @@ summary.lm(viagraModel)
 
 #zero sum (effect codes)
 contrasts(viagraData$dose)<- contr.sum(3)
+contrasts(viagraData$dose)
 #planned contrasts
 contrasts(viagraData$dose)<-cbind(c(-2,1,1), c(0,-1,1))
 #OR
@@ -109,7 +110,6 @@ install.packages("reshape")
 library(effects)
 library(ggplot2)
 library(reshape)
-
 #create dataframe
 libido<-c(3,2,5,2,2,2,7,2,4,7,5,3,4,4,7,5,4,9,2,6,3,4,4,4,6,4,6,2,8,5)
 partnerLibido<-c(4,1,5,1,2,2,7,4,5,5,3,1,2,2,6,4,2,1,3,5,4,3,3,2,0,1,3,0,1,0)

@@ -1,18 +1,17 @@
 import os
 import shutil
 
-
 #get cwd
 os.getcwd()
-
-#change cwd 
-os.chdir('/Users/henrikeckermann/Documents/workspace/own/python_os')
+#change cwd to parrent directory
+os.chdir(os.pardir)
+os.chdir('week_1')
 #list files
 os.listdir()
-
 #make directory
 os.makedirs('testfolder/withsubfolder')
 os.listdir()
+
 
 #walk through folders and files:
 directory = os.getcwd()
@@ -63,4 +62,17 @@ os.path.isfile('/Users/henrikeckermann/Documents/workspace/Own/python_os/os.py')
 os.path.splitext('/Users/henrikeckermann/Documents/workspace/Own/python_os/os.py')
 print(dir(os.path))
 
+
+os.chdir('week_1')
+os.listdir()
+
+os.getcwd()
+shutil.move('week_1.md', 'week_1.txt')
+os.listdir()
+
+with open('week_1.md', 'r') as f:
+    content = f.read()
+
+os.chdir('..')
+os.getcwd()
 

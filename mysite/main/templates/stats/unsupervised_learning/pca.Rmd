@@ -1,0 +1,19 @@
+---
+title: 'Principal Component Analysis in R'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+
+## What is PCA?
+
+PCA is an unsupervised learning technique that is often used in exploratory data analysis. It can also be used before performing principal component regression since PCA is the process by which principal components are computed. Principal components allow to summarize a larger set of variables by breaking up all the variance in the data into principal components that explain then most of the variance.
+
+This analysis will be covered later!

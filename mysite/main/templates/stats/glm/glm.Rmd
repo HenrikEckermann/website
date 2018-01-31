@@ -1,0 +1,27 @@
+
+
+The Poisson regression model:
+
+$y_i ~ Poisson(\theta_i)$, where the parameter $\theta_i$ must be positive, so it makes sense to fit a linear regression on the logharithmic scale:
+
+$\theta_i = exp(X_i \beta)$
+
+Imagine we have a model about traffic accidents:
+
+$y_i ~ Poisson(exp(2.8 + 0.012X_{i1} - 0.20X_{i2}))$
+
+$X
+
+
+
+
+
+
+
+
+
+
+
+Poisson distribution:
+
+$$P(k,\tau) = \frac{\lambda \tau^k e^{\lambda \tau}}{k!}$$
