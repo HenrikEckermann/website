@@ -52,9 +52,9 @@ def rb_hang_ind(filename):
     n = len(doc.paragraphs)
     #find the reference list 
     for p in range(n):
-        if doc.paragraphs[p].text == '2d. Literature references':
+        if doc.paragraphs[p].text == '2d. Literature references ':
             start = p+1 
-        if doc.paragraphs[p].text == '2e. Time Plan':
+        if doc.paragraphs[p].text == '2e. Time Plan ':
             end = p
     #add hanging ident to all following lines (dont use if reflist is not last part)
     for p in range(start, end):
@@ -64,4 +64,17 @@ def rb_hang_ind(filename):
 
     doc.save('hang_ind_{}'.format(filename))
 
-filename = 'first_version'
+rb_hang_ind('first_version.docx')
+
+import os
+os.getcwd()
+os.chdir('block_2/developmental_psychopathology/term_paper')
+os.listdir()
+rb_hang_ind('final.docx')
+
+for i in range(1,9):
+    if i < 6:
+        os.makedirs('week_{}/hw{}'.format(i,i))
+    else:
+        os.mkdir('week_{}'.format(i))
+        

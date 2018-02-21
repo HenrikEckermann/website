@@ -1,6 +1,6 @@
 
 
-The Poisson regression model:
+## The Poisson regression model:
 
 $y_i ~ Poisson(\theta_i)$, where the parameter $\theta_i$ must be positive, so it makes sense to fit a linear regression on the logharithmic scale:
 
@@ -10,18 +10,57 @@ Imagine we have a model about traffic accidents:
 
 $y_i ~ Poisson(exp(2.8 + 0.012X_{i1} - 0.20X_{i2}))$
 
-$X
-
-
-
-
-
-
-
-
-
-
 
 Poisson distribution:
 
 $$P(k,\tau) = \frac{\lambda \tau^k e^{\lambda \tau}}{k!}$$
+
+
+
+
+
+
+## Logistic Binomial Model 
+
+We can also use the logistic model for count data using the binomial distribution, which is:  
+
+$$P_{k,n}(X = k) = \binom{n}{k}  p^k  (1-p)^{n-k}$$
+
+This distribution has an $E(X)= np$ and a variance of $np(1-p)$.
+
+So we write $y_i ~ Binomial(n_i,p_i)$, where $p_i = lotgit^{-1}(X_i\beta)$
+
+When we apply logistic regression to count data it is expected that the data has more variation than is explained by the model. This is called **overdispersion**.  
+
+The standardized residual for each data point is:  
+
+$$z_i = \frac{y_i-\hat{y}_i}{sd(\hat{y}_i)}$$
+<center> &darr; </center>  
+
+$$z_i=\frac{y_i- n_i p_i}{\sqrt{n_i\hat{p}_i(1-\hat{p}_i)}}$$
+
+
+We can estimate the overdispersion with:  
+
+$$\frac{1}{n-k}\sum_{i=1}^n z_i^2$$
+
+A more general model that incorporates an overdispersion parameter $\omega$ (>1) can have a standard deviation of the form $\sqrt{\omega np(1-p)}$.  
+
+A simple correction for overdispersion can be to multiply the SE of all the coefficient estimates by the the sqrt of the estimates overdispersion. Confidence intervals would be too narrow and inferences overconfident! In R, we can fit an overdispersed binomial regression with the function `glm()` with the family `quasibinomial(link='logit')` with beta-binomial distribution as a corresponding ditribution.   
+
+
+## Probit regression 
+
+The probit is the same as the logit with the exception that it uses the normal cumulative distribution function:  
+
+$$P(y=1) = \Phi(X_i \beta)$$  
+
+If $z_i$ > 0, then $y_i = 1$  
+If $z_i$ < 0, then $y_i = 0$  
+$z_i = X_i \beta + \epsilon$  
+$\epsilon ~ N(0,1)$ and more generally the model can have error variance $N(0,\sigma^2)$  
+
+To obtain the coefficients that you would get if you had used the logit model, you simply multiply the coefficients by 1.6.
+
+I skimmed this chapter:  
+We can use the t-distribution for the residual distribution when there is a great uncertainty in our coefficients. Otherwise we can use the normal distribution assumption for the errors in linear regression to model the the association between predictors and a continuous outcome. For binary outcome, we use logit or probit models. Poisson regression is possible to model counts of a certain event happening.

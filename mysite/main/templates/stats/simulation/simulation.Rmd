@@ -1,0 +1,325 @@
+---
+title: 'Simulation in R'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+
+
+As an introduction to using simulation imagine you knew that man have a mean height of  175.4 cm with s=7.3 and woman 165 cm and s=6.8. If you would pick randomly 10 people, what will be their average height?
+
+```{r}
+avg.height <- rep(NA, 1000)
+for (i in c(1:1000)) {
+  sex <- rbinom(10, 1, 0.52)
+  heights <- ifelse(sex==0, rnorm(1, 175.4, 7.3), rnorm(1, 165, 6.8))
+  avg.height[i] <- mean(heights)
+}
+hist(avg.height)
+```
+
+## Why use simulation? 
+
+For illustration we use the following linear regression model: 
+
+```{r}
+getwd()
+setwd('linear_regression/arm_linear_r/earnings')
+library(foreign)
+df <- read.dta('heights.dta')
+df <- na.omit(df)
+df$learn <- log(df$earn+1)
+model <- lm(learn ~ sex*height, data=df)
+summary(model)
+```
+
+$$log(earnings) ~ -7.85sex -0.05height + 0.09sex \times height$$
+
+
+When using regression models in R with sample sizes large enough to apply the central limit theorem, for most situations obtaining point estimates with the predict function incl. the prediction intervals is sufficient. For other situations however, simulation is the easiest way to obtain an uncertainty interval. Imagine for example you want to estimate what is the difference in earnings between a man that is 187cm tall and a woman who is 187cm tall in a model like this: $earnings ~??height + sex$. Simulation is the easiest way to obtain that. Generally, simulation allows to summarize any function of estimated and predicted values.
+
+## Represent uncertainty in regression coefficients  
+
+The uncertainty of the regression model does not only concern the individual predictors but also the combinations of the coefficients. Using the function `sim()` in R we can simulate the full model. This results in a matrix where each row is a set of the coefficients and an additional vector of the residual standard deviation sigma.
+
+```{r}
+library(arm)
+sim.1 <- sim(model)
+height.coef <- sim.1@coef[,3]
+mean(height.coef)
+quantile(height.coef, c(0.025, .975))
+summary(model)
+```
+
+### Exercise 7.6
+
+#### 1 
+Discrete probability simulation: suppose that a basketball player has a 60% chance of making a shot, and he keeps taking shots until he misses two in a row. Also assume his shots are independent (so that each shot has 60% proba- bility of success, no matter what happened before).
+
+
+##### A
+
+Write an R function to simulate this process.
+
+```{r}
+bbsim <- function() {
+  pshot <- 1
+  shot <- 1
+  counter <- 0
+  successes <- 0
+  while (shot+pshot>0) {
+    pshot <- shot
+    shot <- rbinom(1,1,0.6)
+    counter <- counter + 1
+    if (shot==1) {
+      successes <- successes +1
+    }
+  }
+  return(c(counter, successes))
+}
+```
+
+#### B
+
+Put the R function in a loop to simulate the process 1000 times. Use the simulation to estimate the mean, standard deviation, and distribution of the total number of shots that the player will take.
+
+```{r}
+shots <- data.frame(matrix(rep(NA, 2000), ncol=2))
+colnames(shots) <- c('shots', 'successes')
+for (i in c(1:1000)) {
+  trial <- bbsim()
+  shots[i, 'shots'] <- trial[1]
+  shots[i, 'successes'] <- trial[2]
+}
+mean(shots[, 'shots'])
+sd(shots$shots)
+hist(shots$shots)
+```
+
+#### Part C
+
+Using your simulations, make a scatterplot of the number of shots the player will take and the proportion of shots that are successes.
+
+```{r}
+library(ggplot2)
+ggplot(shots, aes(shots, successes/shots)) +
+  geom_jitter(alpha=0.3)
+```
+
+#### 2
+Continuous probability simulation: the logarithms of weights (in pounds) of men in the United States are approximately normally distributed with mean 5.13 and standard deviation 0.17; women with mean 4.96 and standard deviation 0.20. Suppose 10 adults selected at random step on an elevator with a capacity of 1750 pounds. What is the probability that the elevator cable breaks?
+
+```{r}
+weight <- function() {
+  c <- rep(NA, 10)
+  for (i in c(1:10)) {
+    c[i] <- exp(ifelse(rbinom(1, 1, 0.52)==1, rnorm(1, 5.13, 0.17), rnorm(1, 4.96, 0.20)))
+  }
+  return(sum(c)>1750)
+}
+broken <- rep(NA, 1000)
+for (i in c(1:1000)) {
+  broken[i] <- weight()
+}
+mean(broken)
+```
+
+#### 3
+
+```{r}
+s <- rep(NA, 1000)
+for (i in c(1:1000)) {
+  s[i] <- round(rnorm(1, 40000, 10000)) * rnorm(1, 5, 4)
+}
+hist(s)
+
+```
+
+#### 4
+Predictive simulation for linear regression: take one of the models from Exercise 3.5 or 4.8 that predicts course evaluations from beauty and other input variables. You will do some simulations.
+
+
+##### A + B
+Instructor A is a 50-year-old woman who is a native English speaker and has a beauty score of −1. Instructor B is a 60-year-old man who is a native English speaker and has a beauty score of −0.5. Simulate 1000 random draws of the course evaluation rating of these two instructors. In your simulation, account for the uncertainty in the regression parameters (that is, use the sim() function) as well as the predictive uncertainty.
+
+```{r}
+#import data 
+bdf <- read.csv('http://www.stat.columbia.edu/~gelman/arm/examples/beauty/ProfEvaltnsBeautyPublic.csv')
+model <- lm(courseevaluation ~ btystdave + female + nonenglish + age, bdf)
+#sim coefs + sigma 1000
+library(arm)
+sim.1 <- sim(model, 1000)
+m <- rep(NA, 1000)
+f <- m
+higher <- f
+#sim the two prof outcomes 1000x 
+for (i in c(1:1000)) {
+  f[i] <-  sim.1@coef[i,][1] + (sim.1@coef[i,][2] * -1) + (sim.1@coef[i,][3]) + (50*sim.1@coef[i,][5]) +  rnorm(1, 0, sim.1@sigma[i])
+  m[i] <-  sim.1@coef[i,][1] + (sim.1@coef[i,][2] * -0.5) + (sim.1@coef[i,][5]*60) + rnorm(1, 0, sim.1@sigma[i])
+  higher[i] <- f[i]>m[i]
+}
+#calc and plot difference 
+diff <- f-m
+library(reshape2)
+df <- melt(data.frame(m,f, diff))
+library(ggplot2)
+ggplot(df, aes(value, fill=variable)) +
+  geom_histogram() +
+  facet_grid(.~variable)
+#P(a>b)
+mean(higher)
+```
+
+
+
+
+
+#### 5. 
+Predictive simulation for linear regression: using data of interest to you, fit a general linear model. Use the output from this model to simulate a predictive distribution for observations with a particular combination of levels of all the predictors in the regression.
+
+```{r}
+# Exercise 5 (using the well switch model)
+setwd('/Users/henrikeckermann/Documents/workspace/website/mysite/main/templates/stats/logistic_regression/arm_lr/arsenic')
+#import dataset
+df <- read.table('wells.dat')
+df$dist100 <- df$dist/100
+df$educ4 <- df$educ/4
+#center preds 
+centered <- scale(df[,c('dist100','arsenic', 'educ4')], center=T, scale=F)
+colnames(centered) <- c('c_dist100', 'c_arsenic', 'c_educ4')
+df <- cbind(df, centered)
+#fit model 
+fit <- glm(switch ~ c_dist100 + c_arsenic + c_educ4 + c_dist100:c_arsenic + c_dist100:c_educ4+ c_arsenic:c_educ4 , family = binomial(link='logit'), df)
+display(fit)
+
+lr.sim <- sim(fit, 1000)
+x.new <- data.frame(dist100=1, arsenic=-0.5, educ4=0.2)
+xpred <- rep(NA, 1000)
+for (i in c(1:1000)) {
+  xpred[i] <- invlogit(lr.sim@coef[i,1] + lr.sim@coef[i,2]*x.new$dist100 + lr.sim@coef[i,3]*x.new$arsenic + lr.sim@coef[i,4]*x.new$educ4 + lr.sim@coef[i,5]*x.new$dist100*x.new$arsenic + lr.sim@coef[i,6]*x.new$dist100*x.new$educ4 + lr.sim@coef[i,7]*x.new$arsenic*x.new$educ4)
+}
+hist(xpred)
+
+```
+
+
+#### 8 
+Inference for the ratio of parameters: a (hypothetical) study compares the costs and effectiveness of two different medical treatments.  
+- In the first part of the study, the difference in costs between treatments A and B is estimated at $600 per patient, with a standard error of $400, based on a regression with 50 degrees of freedom.  
+-  In the second part of the study, the difference in effectiveness is estimated at 3.0 (on some relevant measure), with a standard error of 1.0, based on a regression with 100 degrees of freedom.  
+- For simplicity, assume that the data from the two parts of the study were collected independently.  
+- 
+Inference is desired for the _incremental cost-effectiveness ratio_: the difference between the average costs of the two treatments, divided by the difference between their average effectiveness. (This problem is discussed further by Heitjan, Moskowitz, and Whang, 1999.)
+
+```{r}
+#a Create 1000 simulation draws of the cost difference and the effectiveness difference, and make a scatterplot of these draws.
+cost_diff <- rnorm(1000, 600, 400)
+eff_diff <- rnorm(1000, 3, 1)
+ratio <- cost_diff/eff_diff
+df <- data.frame(cost_diff, eff_diff, ratio)
+qplot(cost_diff, eff_diff, data=df)
+#b Use simulation to come up with an estimate, 50% interval, and 95% interval for the incremental cost-effectiveness ratio. 
+quantile(df$ratio, c(0.025, 0.975))
+quantile(df$ratio, c(0.25, 0.75))
+qplot(ratio, geom='density', data=df)
+#c Repeat this problem, changing the standard error on the difference in effectiveness to 2.0
+cost_diff <- rnorm(1000, 600, 400)
+eff_diff <- rnorm(1000, 3, 2)
+ratio <- cost_diff/eff_diff
+df <- data.frame(cost_diff, eff_diff, ratio)
+qplot(cost_diff, eff_diff, data=df)
+quantile(df$ratio, c(0.025, 0.975))
+quantile(df$ratio, c(0.25, 0.75))
+qplot(ratio, data=df)
+```
+
+#### 10
+
+10. How many simulation draws are needed: take the model from Exercise 3.5 that predicts course evaluations from beauty and other input variables. Use display() to summarize the model fit. Focus on the estimate and standard error for the coefficient of beauty.
+
+```{r}
+#(a) Use sim() with n.iter = 10000. Compute the mean and standard deviations of the 1000 simulations of the coefficient of beauty, and check that these are close to the output from display.
+#import data 
+bdf <- read.csv('http://www.stat.columbia.edu/~gelman/arm/examples/beauty/ProfEvaltnsBeautyPublic.csv')
+library(arm)
+model <- lm(courseevaluation ~ btystdave + female + nonenglish, bdf)
+display(model)
+#10000
+tt <- sim(model, 10000)
+mean(tt@coef[,2]); sd(tt@coef[,2])
+#(b) Repeat with n.iter = 1000, n.iter = 100, and n.iter = 10. Do each of these a few times in order to get a sense of the simulation variability.
+#1000
+t <- sim(model, 1000)
+mean(t@coef[,2]); sd(t@coef[,2])
+#100
+h <- sim(model, 100)
+mean(h@coef[,2]); sd(h@coef[,2])
+#10
+ten <- sim(model, 10)
+mean(ten@coef[,2]); sd(ten@coef[,2])
+
+#(c) How many simulations were needed to give a good approximation to the mean and standard error for the coefficient of beauty?
+1000
+```
+
+## 8.2 Using Fake-data simulation to understand residual plots
+
+```{r}
+#8.2 Fake data simulation to understand residual plots
+#make fake data
+midterm <- rnorm(50, 50, 12)
+a <- 65
+b <- 4
+sigma <- 15
+y_fake <- a + b * midterm + rnorm(50, 0,15)
+#fit fake model 
+lm_fake <- lm(y_fake ~ midterm)
+display(lm_fake)
+df <- data.frame(midterm, y_fake)
+df$fitted <- fitted(lm_fake)
+df$sresid <- rstandard(lm_fake)
+qplot(fitted, sresid, data=df)
+qplot(y_fake, sresid, data=df)
+qplot(midterm, final, data=grades)
+```
+
+
+# 8.3 Simulating from the fitted model and comparing to actual data
+
+We can use simulation to simulate data from our fitted model to check if our model fits the actual data well by comparing the simulated data with actual data. In the below example, the normal distribution is fit but simulating this 1000 reveals that it does not fit the data well. E.g. the actual data have some very small values but the simulated data do not have this this.
+
+```{r}
+l <- read.delim('lightspeed.dat', skip=3, header=F, sep=' ')
+v <- c()
+for (i in c(1:10)) {
+  v <- append(v, l[,i])
+}
+df <- data.frame(y=na.omit(v))
+# fit a normal distribution
+light <- lm(y ~ 1, df)
+summary(light)
+#See: the mean is intercept + the sd == sd(resid)
+mean(df$y)
+sd(df$y)
+sd(resid(light))
+#simulate 1000 fake parameters
+sim.light <- sim(light, 1000)
+#simulate 1000 fake data sets
+n <- length(df$y)
+y.rep <- array(NA, c(1000, n))
+for (i in 1:1000){
+  y.rep[i,] <- rnorm(n, sim.light@coef[i], sim.light@sigma[i])
+}
+par(mfrow=c(5,4))
+for (s in 1:20){
+  hist(y.rep[s,])
+}
+hist(df$y)
+```

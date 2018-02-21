@@ -1,16 +1,6 @@
 import os
 import shutil
 
-#get cwd
-os.getcwd()
-#change cwd to parrent directory
-os.chdir(os.pardir)
-os.chdir('week_1')
-#list files
-os.listdir()
-#make directory
-os.makedirs('testfolder/withsubfolder')
-os.listdir()
 
 
 #walk through folders and files:
@@ -76,3 +66,27 @@ with open('week_1.md', 'r') as f:
 os.chdir('..')
 os.getcwd()
 
+os.getcwd()
+os.chdir('mixed_models')
+os.listdir()
+os.chdir('../..')
+with open('hw1.Rmd', 'r') as f:
+    content = f.readlines()
+content
+content[1].replace('1', i)
+os.getcwd()
+
+
+for i in range(2,9):
+    os.makedirs('week_{}/hw_{}'.format(i,i))
+    os.chdir('week_{}/hw_{}'.format(i,i))
+    if i <= 5:
+        with open('hw{}.Rmd'.format(i), 'w') as f:
+            content[1] = content[1].replace(str(i-1), str(i))
+            for line in content:
+                f.write(line)
+    os.chdir('../..')
+
+
+
+str(2+2)
