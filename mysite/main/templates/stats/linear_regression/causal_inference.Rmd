@@ -1,0 +1,39 @@
+---
+title: 'Causal Inference in Regression Modeling'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+## Chapter 9: Causal inference using regression on the treatment variable
+
+To make causal interpretations from a regression model much stricter assumptions needs to be met than for making predictive interpretations. @Gelman2007 point out strategies and assumptions for this purpose in chapter 9 and 10. We can not measure a causal effect directly since we cannot give a person both a treatment and no treatment at the same time. Randomization before conducting an experiment is the easiest way to allow causal inference. The idea is that if you cannot compare the effect of a treatment on the same units, you con use units that are similar. By sampling from a representative population, through randomization other possible confounding effects are averaged out and similarity of units can be assumed. Sometimes it is only possible to randomize the treatment to a given group (e.g. a group of students or patients). In that case, causal inferences are still possible but there is no _external validity_, which means that the results are not generalizable to other populations.
+
+In observational (correlational) studies randomization cannot be assumed and therefore systematic differences might exist between treatment vs non-treatment groups. There are different strategies discussed in the chapter from @Gelman2007 and for me it will be helpful to review them again as soon as I am unsure about this topic. One simple strategy is to control for  confounding covariates in the linear regression model. The assumption that allows causal inference is called the _assumption of ignorable treatment assignment_. It does not imply necessarily that we assume that all subjects had the same probability of receiving the treatment but that conditional on the confounding (pre-treatment) covariates this is the case. Thus, this assumption requires that we account for all confounding covariates (the pre-treatment variables that are associated with both the treatment and the outcome). As @Gelman2007 put it: "In an observational study, the 'treatment assignment' is not under the control of the statistician, but one can aim for ignorability by conditioning in the analysis stage on as much pre-treatment information in the regression model as possible". Since we cannot control for all possible confounding variables, we often cannot assume causality. To get an idea to what extend you are allowed to make causal inference, @Gelman2007 give the advice to ask yourself: "What experiment would I create to study the effects in an ideal world without any restrictions?". This ideal idea often will not match to the data you have, so then you can ask yourself what randomized experiment could have generated this data? 
+
+#### Why controlling for a post-treatment variables is not a good idea
+
+Consider a model where you want to estimate the causal effect of treatment T on outcome y, where z is a mediator that is measured after treatment. In that case including z into the regression model will improve model fit but you cannot interpret the effect of T on y as treatment effect of T since the coefficient of T then means the difference in y between treatment groups when they have the same value in z. Also, you cannot estimate the mediating effect of z by including it into the model. @Gelman2007 points out that some researchers mistakenly think that if you add z and the coefficient of T goes to zero or reduced by 50%, that all the effects or half the effects, respectively, of T on y is actually caused/mediated by z. It is possible to make different statements based on assumptions as pointed out by his example in the book. Also misleading is to think that if the coefficient of T turns negative after including z, that T has negative effect on y. As explained, T then reflects the effect of T among those where z is zero. Strategies that would be feasible in this situation are discussed in chapter 10.
+
+
+## Chapter 10: Causal inference using more advanced models 
+
+#### Imbalance and lack of complete overlap
+_Imbalance_ refers to differences in the distribution of confounding variables between treatment groups. Differences does not only include differences in means but also other properties of the distribution such as standard deviation, skew etc.. The closer the distributions of confounding variables across treatment and control groups, the smaller the bias will be when we want to infer the treatment effect as a mean difference between the groups. As a reminder, confounding variables are variables that are associated with the indicator variable and the outcome. _Lack of complete overlap_ refers to the situation where there are regions in the distributions of confounding variables where there are units that were treated but no units that where untreated or vice versa (stated differently: There are no _counterfactuals_). Given the assumption of ignorability (we have measured all confounding variables), both, imbalance and lack of complete overlap restrict causal inference, whereas we can adjust for imbalance but we cannot adjust for lack of complete overlap. In the latter case, we can only make causal inferences for the regions in the data where there is no lack of overlap. 
+
+#### Subclassification: Effects and estimates for different subpopulations
+Split sample into groups of the confounding variable and estimate effects of treatment within each subset. For further explanation check out the book.
+
+#### Matching: Subsetting the data to get overlapping and balanced treatment and control groups
+Matching refers to the strategy of splitting and reorganizing the data in preparation for analysis.The simplest form splitting treatment and controls would be to make pairs (control + treatment) that are as similar ass possible in the confounding variables. Matching is more precise than sub-classification but it may discard data where no match is possible when actually there would be a nearest neighbor not too far away. There are algorithms such as _Mahalanobis distance_ that can be used to find matching pairs. A different technique is to use a _propensity score_, which is method where all the confounding variables are used as predictors with the indicator variable as outcome. The model this is setup to calculate a probability that person with confounders X receives treatment (e.g. with logistic regression). Then pairs are found by assigning to a given treated unit a unit that did not receive treatment with the closest by propensity score. This type of matching can be used with or without replacement. @Gelman2007 give an example in their book. 
+
+#### Lack of overlap when the assignment mechanism is know: regression discontinuity
+For a situation where a known variable C is used to assign people to treatment groups, e.g. when only persons who have a disease score > x receive the treatment and other receive a different treatment.
+
+#### Estimating causal effects indirectly using instrumental variables  

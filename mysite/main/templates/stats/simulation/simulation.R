@@ -1,8 +1,3 @@
-
-
-
-
-
 # Exercise 5 (using the well switch model)
 setwd('/Users/henrikeckermann/Documents/workspace/website/mysite/main/templates/stats/logistic_regression/arm_lr/arsenic')
 #import dataset
@@ -124,3 +119,112 @@ for (s in 1:20){
   hist(y.rep[s,])
 }
 hist(df$y)
+
+# 8.6 Exercises
+
+##### 1. Fitting the wrong model: suppose you have 100 data points that arose from the following model: y = 3 + 0.1x1 + 0.5x2 + error, with errors having a t distribution with mean 0, scale 5, and 4 degrees of freedom. We shall explore the implications of fitting a standard linear regression to these data.  
+
+###### (a) Simulate data from this model. For simplicity, suppose the values of x1 are simply the integers from 1 to 100, and that the values of x2 are random and equally likely to be 0 or 1. Fit a linear regression (with normal errors) to these data and see if the 68% confidence intervals for the regression coefficients (for each, the estimates ±1 standard error) cover the true values. Correction?!: With 100 observations, the central limit theorem applies and it does not really matter whether t or normal. Therefore I use it with 20 observations only...Also, I was unable to simulate scale of 5 with rt().
+ 
+x1 <- 1:20
+x2 <- rbinom(20, 1, 0.5)
+y_fake <- 3 + 0.1*x1 + 0.5*x2 + rt(20, 4)
+df <- data.frame(x1,x2,y_fake)
+fit <- lm(y_fake ~ x1 + x2, df)
+display(fit)
+sim.c <- sim(fit, 1000)
+mean(abs(coef(fit)[1] - sim.c@coef[,1]) < se.coef(fit)[1])
+mean(abs(coef(fit)[2] - sim.c@coef[,2]) < se.coef(fit)[2])
+mean(abs(coef(fit)[3] - sim.c@coef[,3]) < se.coef(fit)[3])
+# Almost. 
+
+###### (b) Put the above step in a loop and repeat 1000 times. Calculate the confidence coverage for the 68% intervals for each of the three coefficients in the model. 
+coef_cov <- array (NA, c(1000, 3))
+for (i in 1:1000) {
+  x1 <- 1:20
+  x2 <- rbinom(20, 1, 0.5)
+  y_fake <- 3 + 0.1*x1 + 0.5*x2 + rt(20, 4)
+  fit <- lm(y_fake ~ x1 + x2)
+  sim.c <- sim(fit, 1000)
+  coef_cov[i,1] <- mean(abs(coef(fit)[1] - sim.c@coef[,1]) < se.coef(fit)[1])
+  coef_cov[i,2] <- mean(abs(coef(fit)[2] - sim.c@coef[,2]) < se.coef(fit)[2])
+  coef_cov[i,3] <- mean(abs(coef(fit)[3] - sim.c@coef[,3]) < se.coef(fit)[3])
+}
+
+df_coef <- as.data.frame(coef_cov)
+sapply(df_coef, mean)
+
+###### (c) Repeat this simulation, but instead fit the model using t errors (see Exercise 6.6).
+coef_cov <- array (NA, c(1000, 3))
+t.68 <-  qt (.84, 20-2)
+for (i in 1:1000) {
+  x1 <- 1:20
+  x2 <- rbinom(20, 1, 0.5)
+  y_fake <- 3 + 0.1*x1 + 0.5*x2 + rt(20, 4)
+  fit <- lm(y_fake ~ x1 + x2)
+  sim.c <- sim(fit, 1000)
+  coef_cov[i,1] <- mean(abs(coef(fit)[1] - sim.c@coef[,1]) < se.coef(fit)[1]*t.68)
+  coef_cov[i,2] <- mean(abs(coef(fit)[2] - sim.c@coef[,2]) < se.coef(fit)[2]*t.68)
+  coef_cov[i,3] <- mean(abs(coef(fit)[3] - sim.c@coef[,3]) < se.coef(fit)[3]*t.68)
+}
+
+df2 <- data.frame(coef_cov)
+sapply(df2, mean)
+
+
+
+#### 2. Predictive checks: using data of interest to you, fit a model of interest.
+
+###### (a) Simulate replicated datasets and visually compare to the actual data.
+###### (b) Summarize the data by a numerical test statistic, and compare to the values of the test statistic in the replicated datasets.
+
+n <- 100
+b1 <- 1.5
+b2 <- 0.7
+b0 <- 5
+x1 <- 1:n
+x2 <- rbinom(n, 1, 0.5)
+y_fake <- b0 + b1*x1 + b2*x2 + rexp(n, 0.3)
+
+fit <- lm(y_fake ~ x1 + x2)
+
+sims <- sim(fit, 100)
+mat <- array(NA, c(100, 100))
+for (i in 1:20) {
+  mat[, i] <- sims@coef[i,1] + sims@coef[i,2]*x1 + sims@coef[i,3]*x2 + rnorm(n, 0, sims@sigma[i])
+}
+df_mat <- as.data.frame(mat)
+sapply(df_mat, hist)
+hist(y_fake)
+hist(y_fake)
+
+
+#### 3. Using simulation to check the fit of a time-series model: find time-series data and fit a first-order autoregression model to it. Then use predictive simulation to check the fit of this model as in Section 8.4.
+
+
+
+## --> Will do this exercise after I focused on poisson more...
+#### 4. Model checking for count data: the folder risky.behavior contains data from a study of behavior of couples at risk for HIV; see Exercise 6.1.
+
+###### (a) Fit a Poisson regression model predicting number of unprotected sex acts from baseline HIV status. Perform predictive simulation to generate 1000 datasets and record both the percent of observations that are equal to 0 and the percent that are greater than 10 (the third quartile in the observed data) for each. Compare these values to the observed value in the original data.
+library(foreign)
+df <- read.dta('http://www.stat.columbia.edu/~gelman/arm/examples/risky.behavior/risky_behaviors.dta')
+str(df)
+df$hiv_bs <- NA 
+df[df$bs_hiv=='positive', 'hiv_bs'] <- 1
+df[df$bs_hiv=='negative', 'hiv_bs'] <- 2
+head(df)
+df$fupacts
+fit <- glm(fupacts ~ bs_hiv, family=poisson, df)
+sim_pois <- sim(fit, 1000)
+y_fake <- array(NA, c(length(df$hiv_bs), 1000))
+for (i in 1:1000) {
+  y_fake[,i] <- sim_pois@coef[i,1] + sim_pois@coef[i,2]*df$hiv_bs
+}
+rpois(1,y_fake[,1])
+sim_pois@coef[,1]
+y_fake <- sim_pois@coef[1] + sim_pois@coef[2]*df$hiv_bs
+y_fake
+head(df)
+###### (b) Repeat (a) using an overdispersed Poisson regression model.  
+###### (c) Repeat (b), also including ethnicity and baseline number of unprotected sex acts as input variables.

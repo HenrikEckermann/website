@@ -1,0 +1,12 @@
+
+Dummy vs Effect coding 
+first order effects vs main effects 
+no vs yes (direct interpretation of interaction in the classical sense)
+second and third order effects vs two and three way interactions 
+
+Important for hypothesis testing:  
+If product terms (interactions) are included in a model, the coefficients when dummy coding is used, do not test the hypothesis that the main effect, two-way interaction etc. == 0 but rather tests if these == 0 given that the other variables == 0. This is not the same as what is classically referred to as main effect or three way effect but rather is called first order, second order... effects. However, the highest order effects is similar in dummy and effects coding. When effects coding is used, the coefficients generally can directly be interpreted as the main effect, two way interaction etc. **IF** you multiply them by the scaling factor of 2.
+
+
+I found that in a model with one categorical predictor with 2 levels I can get the same coefficients in dummy and effects coding if I center the dummy code and the continuous predictor. Even better, the intercept is then interpretable as the overall mean. This is helpful when the groups have unequal sizes. However, this does not apply in a 2x2 design. But here subtracting the midpoint (0.5) works to create exactly the same model. I need to experiment with that further.
+
