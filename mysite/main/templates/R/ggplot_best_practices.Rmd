@@ -31,7 +31,7 @@ A better alternative to get the same and even more information is plotting the i
 ```{r}
 ggplot(mtcars, aes(x=cyl,y=wt)) +
   geom_jitter(width=0.2) +
-  stat_summary(fun.y = mean, geom = 'point', fill = 'red') +
+  stat_summary(fun.y = mean, geom = 'point', color = 'red') +
   stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = 0.2, col='red')
 ```
 

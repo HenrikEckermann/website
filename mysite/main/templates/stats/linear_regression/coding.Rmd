@@ -10,3 +10,4 @@ If product terms (interactions) are included in a model, the coefficients when d
 
 I found that in a model with one categorical predictor with 2 levels I can get the same coefficients in dummy and effects coding if I center the dummy code and the continuous predictor. Even better, the intercept is then interpretable as the overall mean. This is helpful when the groups have unequal sizes. However, this does not apply in a 2x2 design. But here subtracting the midpoint (0.5) works to create exactly the same model. I need to experiment with that further.
 
+

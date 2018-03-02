@@ -1,0 +1,24 @@
+---
+title: 'Multilevel Regression in R'
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    df_print: paged
+    theme: default
+bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
+---
+
+
+## Varying-intercept and varying-slope models
+
+As seen below, intercepts, slopes or both can vary. The varying slopes are basically interactions between the indicator variable of the group and the continuous predictor. 
+
+$$y_i = \alpha_{j[i]} + \beta x_i + \epsilon_i$$
+
+$$y_i = \alpha + \beta_{j[i]} x_i + \epsilon_i$$
+
+$$y_i = \alpha_{j[i]} + \beta_{j[i]} x_i + \epsilon_i$$
+

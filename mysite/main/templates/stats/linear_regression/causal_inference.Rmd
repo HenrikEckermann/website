@@ -37,3 +37,7 @@ Matching refers to the strategy of splitting and reorganizing the data in prepar
 For a situation where a known variable C is used to assign people to treatment groups, e.g. when only persons who have a disease score > x receive the treatment and other receive a different treatment.
 
 #### Estimating causal effects indirectly using instrumental variables  
+Reading this again might be a good introduction for structural equation modeling because @Gelman2007 shortly writes that he is cautious to make causal inferences and therefore does not discuss structural equation model further. Seems like he is not a fan of the method.
+
+NOTE: 
+I only skimmed chapter 9 + 10 for now since I need to focus on how to do a multi level analysis.
