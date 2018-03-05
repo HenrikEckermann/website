@@ -13,14 +13,8 @@ class Lr_rView(TemplateView):
 class Linear_rView(TemplateView):
     template_name = 'stats/linear_regression/linear_r.html'
 
-class MidtermView(TemplateView):
-    template_name = 'Blok 1/Multivariate Statistics/Midterm/mid-term.html'
-
-class NbCltAndTtest(TemplateView):
-    template_name = 'LearningR/clt_and_t-distribution.html'
-
-class NbEda(TemplateView):
-    template_name = 'LearningR/EDA.html'
+class Xyplot_rView(TemplateView):
+    template_name = 'stats/multilevel_regression/xyplot.html'
 
 class AboutView(TemplateView):
     template_name = 'about.html'
