@@ -11,6 +11,10 @@ bibliography: /Users/henrikeckermann/Documents/workspace/bibTex/packages.bib
 csl: https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl
 ---
 
+```{r}
+library(tidyverse)
+library(arm)
+```
 
 ## Varying-intercept and varying-slope models
 
@@ -21,4 +25,29 @@ $$y_i = \alpha_{j[i]} + \beta x_i + \epsilon_i$$
 $$y_i = \alpha + \beta_{j[i]} x_i + \epsilon_i$$
 
 $$y_i = \alpha_{j[i]} + \beta_{j[i]} x_i + \epsilon_i$$
+
+
+Without any predictors the MLM can be seen as an intermediate between a complete pooling and no pooling. Imagine the radon levels model as described in @Gelman2007. In scenario with predictors (x=floor of measurement), the complete pooling is a linear regression (y~x) whereas the no-pooling could be seen as a linear regression with a county indicator (y~county + b). MLM compromise between models that could be describes as complete pooling vs models that do not pool at all. The relative weight of each cluster is determined by sample size and variation within and between groups.
+
+
+```{r}
+cols <- c("MLM"="#ff0000","pooled"="#808080","unpooled"="#87CEFA")
+rownames_to_column(coef(fit)$pid, 'pid') %>%
+  select('pid','(Intercept)', 'c_trial', 'gender1') %>% 
+  right_join(df, by='pid') %>%
+  rename(intercepts = '(Intercept)') %>%
+  ggplot(aes(c_trial.y, distance)) +
+    geom_smooth(method='lm', se=F, aes(color= 'unpooled'), size=0.6) +
+    geom_abline(aes(intercept=intercepts, slope=c_trial.x, color='MLM')) +
+    geom_abline(aes(intercept=fixef(fit)[1], slope=fixef(fit)[3], color='pooled')) +
+    geom_point(size=0.75) +
+    scale_color_manual(name="Model Fit",values=cols) +
+    facet_wrap(~pid)
+```
+
+
+To interpret between group variation $\sigma_{\alpha}$  we can consider the variance ratio $\sigma_{\alpha}^2/\sigma_{y}^2$ or the intraclass correlation $\frac{sigma_{\alpha}^2}{sigma_{\alpha}^2+sigma_{y}^2}\$. The latter ranges from 0 to 1 where 0 indicates no group information and 1 indicates that all group members are identical in the outcome.
+
+
+
 
