@@ -10,16 +10,16 @@ directory = os.path.expanduser(
 #######################################################
 # Webscrapint maybe for later
 # store string in a file
-url = 'view-source:http://www.pythonchallenge.com/pc/def/ocr.html'
-#import bs4
-from bs4 import BeautifulSoup, Comment
-import requests
-# open the html file
-with open(f"{directory}/2/ocr.html") as html_file:
-    soup = BeautifulSoup(html_file, 'lxml')
-soup.findAll(text=lambda text: isinstance(text, Comment))
-match = soup.find_all(strin=lambda text: isinstance(text, Comment))
-print(match)
+# url = 'view-source:http://www.pythonchallenge.com/pc/def/ocr.html'
+# #import bs4
+# from bs4 import BeautifulSoup, Comment
+# import requests
+# # open the html file
+# with open(f"{directory}/2/ocr.html") as html_file:
+#     soup = BeautifulSoup(html_file, 'lxml')
+# soup.findAll(text=lambda text: isinstance(text, Comment))
+# match = soup.find_all(strin=lambda text: isinstance(text, Comment))
+# print(match)
 #####################################################
 
 ### -0- ###
@@ -274,9 +274,149 @@ img_url = url.replace("5808.html", img_link["src"])
 img = Image.open(requests.get(img_url, stream = True, auth=('huge', 'file')).raw)
 img
 width, height = img.size
+img.size
+pixel_dark = []
+pixel_norm = []
 pixel = []
-for w in range(width):
-    for h in range(height):
-        pixel.append(img.getpixel((w, h)))
+odd_even = 0
 
-pixel 
+for h in range(height):
+    for w in range(width):
+        pixel.append(img.getpixel((w,h)))
+
+len(pixel)/640
+pixel_split = []
+for i in range(0, len(pixel), 640):
+    start = i 
+    end = i + 640
+    pixel_split.append(pixel[start:end])
+
+l_even = []
+l_odd = []
+for i, l in enumerate(pixel_split):
+    if i % 2 == 0:
+        l_even.append(l)
+    else:
+        l_odd.append(l)
+
+
+len(l_even)
+len(l_odd)
+
+
+
+len(pixel_split)
+pixel_split[8][0:10]
+p = 1
+
+img_even = Image.new('RGB', (320, 240))
+img_odd = Image.new('RGB', (320, 240))
+repr = Image.new("RGB", (img.size))
+
+for h in range(height//2):
+    counter = 0
+    for w in range(0, width//2):
+        img_even.putpixel((w, h), l_even[h][counter])
+        img_odd.putpixel((w, h), l_odd[h][counter])
+        counter += 1
+
+for h in range(height):
+    for w in range(width):
+        if h % 2 == 0:
+            repr.putpixel((w, h), l_even[h][counter_even])
+            counter_even += 1
+        else:
+            repr.putpixel((w, h), l_odd[h][counter_odd])
+            counter_odd +=1
+
+img_even.save("even.jpg")
+img_odd.save("odd.jpg")
+img_norm.size
+
+l_even[0]
+
+
+
+
+
+
+
+
+# for w in range(width):
+#     for h in range(0, height):
+#         if w%2==0:
+#             pixel_dark.append(img.getpixel((w, h)))
+#         else:
+#             pixel_norm.append(img.getpixel((w, h)))
+# 
+# len(pixel_dark)
+# 
+# for w in range(width):
+#     counter = 0
+#     for h in range(height):
+#         if odd_even%2==0:
+#             if h%2==0:
+#                 pixel_dark.append(img.getpixel((w, h)))
+#             else:
+#                 pixel_norm.append(img.getpixel((w, h)))
+#         else:
+#             if h%2==0:
+#                 pixel_norm.append(img.getpixel((w, h)))
+#             else:
+#                 pixel_dark.append(img.getpixel((w, h)))
+#         counter += 1
+#         if counter==480:
+#             odd_even += 1
+# 
+# 
+# 
+# 
+# 
+# 
+# img_dark = Image.new('RGB', (320, 240))
+# img_norm = Image.new('RGB', (320, 240))
+# 
+# 
+# counter = 0
+# for w in range(width//2):
+#     for h in range(height//2):
+#         img_dark.putpixel((w, h), pixel_dark[counter])
+#         img_norm.putpixel((w, h), pixel_norm[counter])
+#         counter += 1
+# 
+# img_dark.save("dark.jpg")   
+# img_norm.save("norm.jpg")
+# img_norm.size
+# 
+# 
+# pixel_dark = []
+# pixel_norm = []
+# odd_even = 0
+# for w in range(width):
+#     counter = 0
+#     for h in range(height):
+#         if odd_even%2==0:
+#             pixel_dark.append(img.getpixel((w, h)))
+#         else:
+#             pixel_norm.append(img.getpixel((w, h)))
+#         counter += 1
+#         if counter==480:
+#             odd_even += 1
+# 
+# len(pixel_dark)        
+# img_dark = Image.new('RGB', (320, 240))
+# img_norm = Image.new('RGB', (320, 240))
+# 
+# counter = 0
+# for w in range(width//2):
+#     for h in range(height//2):
+#         img_dark.putpixel((w, h), pixel_dark[counter])
+#         img_norm.putpixel((w, h), pixel_norm[counter])
+#         counter += 1        
+# 
+# img_dark    
+# img_norm     
+# 
+# pixel_dark==pixel_norm
+# pixel_dark
+# pixel_norm

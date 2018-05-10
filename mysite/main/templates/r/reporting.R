@@ -52,20 +52,40 @@ print_comp <- function(model, name, method='PB') {
 
 ### --- for PCA --- ###
 
-# make sig loadings bold
-pca_bolding <- function(x, cut = 0.4) {
+make_bold <- function(x, cut = 0.4) {
   ifelse(x>=cut, glue("**{round(x, digits = 2)}**"), glue("{round(x, digits = 2)}"))
 }
 
-# return rmarkdown pca table 
-pca_table <- function(pca_object, cut = 0.4, caption = 'Component loadings') {
+attr(make_bold, "comment") <- "make_bold adds markdown syntax such that significant values will be printed bold"
+
+# returns rmarkdown pca table 
+pca_table <- function(pca_object, cut = 0.4, caption = 'Component loadings', cr_alpha = "none") {
   pca_tab <- as.data.frame(unclass(pca_object$loadings))
   fac_names <- rownames(pca_tab)
   # format loadings
-  pca_tab <- mutate_all(pca_tab, funs(pca_bolding))
+  pca_tab <- mutate_all(pca_tab, funs(make_bold))
   rownames(pca_tab) <- fac_names
+  # optional: Implement cronbach's in table
+  if (class(cr_alpha) == "list") {
+    pca_tab["**Cronbach's Alpha**",] <- NA
+    for (i in 1:5) {
+      value <- round(cr_alpha[[i]]$total[1,1], digits = 2)
+      pca_tab["**Cronbach's Alpha**", i] <- value
+    }
+  }
+  # eigenvalues and explained variance
+  eigen_and_var <- as_data_frame(pca_object$Vaccounted[1:2,])
+  rownames(eigen_and_var) <- c("**Eigenvalues**", "**Variance explained (%)**")
+  eigen_and_var[2,] <-  eigen_and_var[2,] * 100 
+  eigen_and_var <- round(eigen_and_var, digits = 2)
+  pca_tab <- rbind(pca_tab, eigen_and_var)
+  panderOptions("table.emphasize.rownames", FALSE)
   pander(pca_tab, caption = caption)
 }
 
 
+attr(pca_table, "comment") <- "pca_table returns table in markdown syntax for reporting a principal component analysis"
 
+report_chi <- function(chi, df, p) {
+  return(glue("$\\chi^2$({df}) = {round(chi, digits = 2)}, {report_p(p)}"))
+}
